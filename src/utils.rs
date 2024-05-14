@@ -49,17 +49,17 @@ type RethTxPool = Pool<
     CoinbaseTipOrdering<EthPooledTransaction>,
     InMemoryBlobStore,
 >;
-pub type RethApi = EthApi<RethClient, RethTxPool, NoopNetwork, EthEvmConfig>;
+pub type RethEthApi = EthApi<RethClient, RethTxPool, NoopNetwork, EthEvmConfig>;
 pub type RethFilter = EthFilter<RethClient, RethTxPool>;
-pub type RethTrace = TraceApi<RethClient, RethApi>;
-pub type RethDebug = DebugApi<RethClient, RethApi>;
+pub type RethTrace = TraceApi<RethClient, RethEthApi>;
+pub type RethDebug = DebugApi<RethClient, RethEthApi>;
 pub type RethDbProvider = DatabaseProvider<Tx<RO>>;
 
 /// initializes the reth api endpoints via libmdbx
 pub(crate) fn init_eth(
     db_path: &Path,
     handle: Handle,
-) -> eyre::Result<(RethApi, RethFilter, RethTrace, RethDebug, RethDbProvider)> {
+) -> eyre::Result<(RethEthApi, RethFilter, RethTrace, RethDebug, RethDbProvider)> {
     let task_manager = TaskManager::new(handle.clone());
     let task_executor = task_manager.executor();
 
