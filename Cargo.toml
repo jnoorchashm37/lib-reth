@@ -58,7 +58,7 @@ rayon = "1.10"
 
 [features]
 default = []
-all = ["ipc", "ws", "libmdbx"]
+full = ["ipc", "ws", "libmdbx"]
 
 ipc = []
 ws = []
