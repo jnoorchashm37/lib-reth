@@ -283,8 +283,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
         EthStateCache::spawn_with(provider.clone(), eth_state_config, task_executor.clone(), EthEvmConfig::default()),
         FeeHistoryCacheConfig::default()
     );
-    // blocking task pool
-    // fee history cache
+
     let api = EthApi::new(
         provider.clone(),
         tx_pool.clone(),
