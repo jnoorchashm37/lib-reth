@@ -3540,6 +3540,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
+name = "lib-reth"
+version = "0.1.0"
+dependencies = [
+ "alloy-json-rpc",
+ "alloy-primitives",
+ "alloy-provider",
+ "alloy-pubsub",
+ "alloy-rpc-client",
+ "alloy-rpc-types",
+ "alloy-transport-http",
+ "eyre",
+ "futures",
+ "rayon",
+ "reth-beacon-consensus",
+ "reth-blockchain-tree",
+ "reth-chainspec",
+ "reth-db",
+ "reth-db-api",
+ "reth-libmdbx",
+ "reth-network-api",
+ "reth-node-ethereum",
+ "reth-primitives-traits",
+ "reth-provider",
+ "reth-prune-types",
+ "reth-rpc",
+ "reth-rpc-eth-types",
+ "reth-rpc-server-types",
+ "reth-rpc-types-compat",
+ "reth-storage-errors",
+ "reth-tasks",
+ "reth-transaction-pool",
+ "tokio",
+ "tokio-stream",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.155"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4988,42 +5024,6 @@ checksum = "52e44394d2086d010551b14b53b1f24e31647570cd1deb0379e2c21b329aba00"
 dependencies = [
  "hostname",
  "quick-error",
-]
-
-[[package]]
-name = "reth-api"
-version = "0.1.0"
-dependencies = [
- "alloy-json-rpc",
- "alloy-primitives",
- "alloy-provider",
- "alloy-pubsub",
- "alloy-rpc-client",
- "alloy-rpc-types",
- "alloy-transport-http",
- "eyre",
- "futures",
- "rayon",
- "reth-beacon-consensus",
- "reth-blockchain-tree",
- "reth-chainspec",
- "reth-db",
- "reth-db-api",
- "reth-libmdbx",
- "reth-network-api",
- "reth-node-ethereum",
- "reth-primitives-traits",
- "reth-provider",
- "reth-prune-types",
- "reth-rpc",
- "reth-rpc-eth-types",
- "reth-rpc-server-types",
- "reth-rpc-types-compat",
- "reth-storage-errors",
- "reth-tasks",
- "reth-transaction-pool",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]

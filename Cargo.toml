@@ -1,11 +1,11 @@
 [package]
-name = "reth-api"
+name = "lib-reth"
 version = "0.1.0"
 edition = "2021"
 
 
 [lib]
-name = "reth_api"
+name = "lib_reth"
 path = "src/lib.rs"
 
 [dependencies]
