@@ -1,4 +1,4 @@
-# Reth Ethereum API
+# Reth Ethereum Library
 A library for connecting to and interacting with various ethereum endpoints offered by [reth](https://github.com/paradigmxyz/reth)
 
 ### Connection Types
