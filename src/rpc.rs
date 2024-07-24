@@ -18,17 +18,17 @@ use futures::Stream;
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use crate::streams::EthStream;
 
-pub struct EthPubsubClient<P> {
+pub struct EthRpcClient<P> {
     provider: RootProvider<P>
 }
 
-impl<P> EthPubsubClient<P> {
+impl<P> EthRpcClient<P> {
     pub fn provider(&self) -> &RootProvider<P> {
         &self.provider
     }
 }
 
-impl EthPubsubClient<PubSubFrontend> {
+impl EthRpcClient<PubSubFrontend> {
     #[cfg(feature = "ws")]
     pub async fn new_ws(ws_url: &str) -> eyre::Result<Self> {
         let builder = ClientBuilder::default().ws(WsConnect::new(ws_url)).await?;
@@ -46,7 +46,7 @@ impl EthPubsubClient<PubSubFrontend> {
     }
 }
 
-impl EthPubsubClient<Http<Client>> {
+impl EthRpcClient<Http<Client>> {
     pub fn new_http(http_url: &str) -> eyre::Result<Self> {
         let builder = ClientBuilder::default().http(http_url.parse()?);
 
@@ -56,7 +56,7 @@ impl EthPubsubClient<Http<Client>> {
 }
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
-impl EthStream for EthPubsubClient<PubSubFrontend> {
+impl EthStream for EthRpcClient<PubSubFrontend> {
     async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Block>> {
         Ok(self.provider.subscribe_blocks().await?.into_stream())
     }
