@@ -26,7 +26,7 @@ pub struct EthRpcClient<P> {
 
 impl<P> EthRpcClient<P>
 where
-    P: Transport
+    P: Transport + Clone
 {
     pub fn provider(&self) -> &RootProvider<P> {
         &self.provider
