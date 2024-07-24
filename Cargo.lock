@@ -4991,7 +4991,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "reth-api-libmdbx"
+name = "reth-api"
 version = "0.1.0"
 dependencies = [
  "alloy-json-rpc",

@@ -1,11 +1,11 @@
 [package]
-name = "reth-api-libmdbx"
+name = "reth-api"
 version = "0.1.0"
 edition = "2021"
 
 
 [lib]
-name = "reth_api_libmdbx"
+name = "reth_api"
 path = "src/lib.rs"
 
 [dependencies]
