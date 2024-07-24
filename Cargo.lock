@@ -3549,6 +3549,7 @@ dependencies = [
  "alloy-pubsub",
  "alloy-rpc-client",
  "alloy-rpc-types",
+ "alloy-transport",
  "alloy-transport-http",
  "eyre",
  "futures",

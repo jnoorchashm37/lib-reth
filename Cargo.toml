@@ -35,6 +35,7 @@ reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", package = "reth-li
 # alloy
 alloy-provider = { version = "0.2", default-features = false, features = ["ipc", "ws", "pubsub", "reqwest"] }
 alloy-rpc-client = { version = "0.2", default-features = false, features = ["ipc", "ws", "pubsub"] }
+alloy-transport = { version = "0.2", default-features = false }
 alloy-json-rpc = { version = "0.2", default-features = false }
 alloy-transport-http = { version = "0.2", default-features = false }
 alloy-pubsub = { version = "0.2", default-features = false }

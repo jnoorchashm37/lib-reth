@@ -11,6 +11,7 @@ use alloy_rpc_client::IpcConnect;
 use alloy_rpc_client::WsConnect;
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use alloy_rpc_types::{Block, Filter, Log, Transaction};
+use alloy_transport::Transport;
 use alloy_transport_http::{Client, Http};
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use futures::Stream;
@@ -22,7 +23,10 @@ pub struct EthRpcClient<P> {
     provider: RootProvider<P>
 }
 
-impl<P> EthRpcClient<P> {
+impl<P> EthRpcClient<P>
+where
+    P: Transport
+{
     pub fn provider(&self) -> &RootProvider<P> {
         &self.provider
     }
