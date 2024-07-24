@@ -3,6 +3,7 @@ use alloy_primitives::TxHash;
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use alloy_provider::Provider;
 use alloy_provider::RootProvider;
+#[cfg(any(feature = "ipc", feature = "ws"))]
 use alloy_pubsub::PubSubFrontend;
 use alloy_rpc_client::ClientBuilder;
 #[cfg(feature = "ipc")]
@@ -32,6 +33,7 @@ where
     }
 }
 
+#[cfg(any(feature = "ipc", feature = "ws"))]
 impl EthRpcClient<PubSubFrontend> {
     #[cfg(feature = "ws")]
     pub async fn new_ws(ws_url: &str) -> eyre::Result<Self> {
