@@ -94,24 +94,24 @@ impl RethLibmdbxClient {
         new_with_db(db, max_tasks, task_executor, static_files)
     }
 
-    pub fn eth_api(&self) -> &RethApi {
-        &self.api
+    pub fn eth_api(&self) -> RethApi {
+        self.api.clone()
     }
 
-    pub fn eth_filter(&self) -> &RethFilter {
-        &self.filter
+    pub fn eth_filter(&self) -> RethFilter {
+        self.filter.clone()
     }
 
-    pub fn eth_trace(&self) -> &RethTrace {
-        &self.trace
+    pub fn eth_trace(&self) -> RethTrace {
+        self.trace.clone()
     }
 
-    pub fn eth_debug(&self) -> &RethDebug {
-        &self.debug
+    pub fn eth_debug(&self) -> RethDebug {
+        self.debug.clone()
     }
 
-    pub fn eth_tx_pool(&self) -> &RethTxPool {
-        &self.tx_pool
+    pub fn eth_tx_pool(&self) -> RethTxPool {
+        self.tx_pool.clone()
     }
 
     pub fn eth_db_provider(&self) -> &RethDbProvider {
