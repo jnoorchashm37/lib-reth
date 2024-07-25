@@ -5,14 +5,14 @@ use futures::{Future, Stream};
 /// `eth_subscribe`
 pub trait EthStream {
     /// `newHeads`
-    fn block_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Block>>>;
+    fn block_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Block> + Send>>;
 
     /// `newPendingTransactions` (true)
-    fn full_pending_transaction_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Transaction>>>;
+    fn full_pending_transaction_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Transaction> + Send>>;
 
     /// `newPendingTransactions` (false)
-    fn pending_transaction_hashes_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash>>>;
+    fn pending_transaction_hashes_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>>;
 
     /// `logs`
-    fn log_stream(&self, filter: &Filter) -> impl Future<Output = eyre::Result<impl Stream<Item = Log>>>;
+    fn log_stream(&self, filter: &Filter) -> impl Future<Output = eyre::Result<impl Stream<Item = Log> + Send>>;
 }
