@@ -1,8 +1,8 @@
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use alloy_primitives::TxHash;
-#[cfg(any(feature = "ipc", feature = "ws"))]
-use alloy_provider::Provider;
-use alloy_provider::RootProvider;
+// #[cfg(any(feature = "ipc", feature = "ws"))]
+// use alloy_provider::Provider;
+use alloy_provider::{Provider, RootProvider};
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use alloy_pubsub::PubSubFrontend;
 use alloy_rpc_client::ClientBuilder;
@@ -85,5 +85,11 @@ impl EthStream for EthRpcClient<PubSubFrontend> {
 
     async fn log_stream(&self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send> {
         Ok(self.provider.subscribe_logs(filter).await?.into_stream())
+    }
+}
+
+impl<T: Transport + Clone> alloy_provider::Provider<T> for EthRpcClient<T> {
+    fn root(&self) -> &RootProvider<T> {
+        &self.provider.root()
     }
 }
