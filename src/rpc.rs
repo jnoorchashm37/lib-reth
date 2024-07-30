@@ -83,8 +83,8 @@ impl<'a> EthStream<'a> for EthRpcClient<PubSubFrontend> {
             .into_stream())
     }
 
-    async fn log_stream(&'a self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
-        Ok(self.provider.subscribe_logs(filter).await?.into_stream())
+    async fn log_stream(&'a self, filter: Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
+        Ok(self.provider.subscribe_logs(&filter).await?.into_stream())
     }
 }
 

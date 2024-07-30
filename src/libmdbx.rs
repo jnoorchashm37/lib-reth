@@ -207,7 +207,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn log_stream(&'a self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
+    async fn log_stream(&'a self, filter: Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
         let stream = BroadcastStream::new(self.api.provider().subscribe_to_canonical_state())
             .map(move |canon_state| {
                 canon_state

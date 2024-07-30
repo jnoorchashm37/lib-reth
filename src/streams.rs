@@ -20,6 +20,6 @@ pub trait EthStream<'a> {
     /// `logs`
     fn log_stream(
         &'a self,
-        filter: &Filter
+        filter: Filter
     ) -> impl Future<Output = eyre::Result<impl Stream<Item = Log> + Send + 'a>> + Send;
 }
