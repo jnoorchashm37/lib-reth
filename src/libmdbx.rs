@@ -119,8 +119,8 @@ impl RethLibmdbxClient {
     }
 }
 
-impl EthStream for RethLibmdbxClient {
-    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Block> + Send> {
+impl<'a> EthStream<'a> for RethLibmdbxClient {
+    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Block> + Send + 'a> {
         let stream = self
             .api
             .provider()
@@ -187,7 +187,7 @@ impl EthStream for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Transaction> + Send> {
+    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Transaction> + Send + 'a> {
         let stream = self
             .api
             .pool()
@@ -197,7 +197,7 @@ impl EthStream for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
+    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send + 'a> {
         let stream = self
             .api
             .pool()
@@ -207,7 +207,7 @@ impl EthStream for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn log_stream(&self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send> {
+    async fn log_stream(&self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
         let stream = BroadcastStream::new(self.api.provider().subscribe_to_canonical_state())
             .map(move |canon_state| {
                 canon_state
