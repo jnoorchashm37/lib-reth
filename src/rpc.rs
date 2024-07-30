@@ -63,11 +63,11 @@ impl EthRpcClient<Http<Client>> {
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
 impl<'a> EthStream<'a> for EthRpcClient<PubSubFrontend> {
-    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Block> + Send + 'a> {
+    async fn block_stream(&'a self) -> eyre::Result<impl Stream<Item = Block> + Send + 'a> {
         Ok(self.provider.subscribe_blocks().await?.into_stream())
     }
 
-    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Transaction> + Send + 'a> {
+    async fn full_pending_transaction_stream(&'a self) -> eyre::Result<impl Stream<Item = Transaction> + Send + 'a> {
         Ok(self
             .provider
             .subscribe_full_pending_transactions()
@@ -75,7 +75,7 @@ impl<'a> EthStream<'a> for EthRpcClient<PubSubFrontend> {
             .into_stream())
     }
 
-    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send + 'a> {
+    async fn pending_transaction_hashes_stream(&'a self) -> eyre::Result<impl Stream<Item = TxHash> + Send + 'a> {
         Ok(self
             .provider
             .subscribe_pending_transactions()
@@ -83,7 +83,7 @@ impl<'a> EthStream<'a> for EthRpcClient<PubSubFrontend> {
             .into_stream())
     }
 
-    async fn log_stream(&self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
+    async fn log_stream(&'a self, filter: &Filter) -> eyre::Result<impl Stream<Item = Log> + Send + 'a> {
         Ok(self.provider.subscribe_logs(filter).await?.into_stream())
     }
 }
