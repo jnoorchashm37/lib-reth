@@ -5,21 +5,18 @@ use futures::{Future, Stream};
 /// `eth_subscribe`
 pub trait EthStream<'a> {
     /// `newHeads`
-    fn block_stream(&'a self) -> impl Future<Output = eyre::Result<impl Stream<Item = Block> + Send + 'a>> + Send;
+    fn block_stream(&'a self) -> impl Future<Output = eyre::Result<impl Stream<Item = Block> + Send>> + Send;
 
     /// `newPendingTransactions` (true)
     fn full_pending_transaction_stream(
         &'a self
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Transaction> + Send + 'a>> + Send;
+    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Transaction> + Send>> + Send;
 
     /// `newPendingTransactions` (false)
     fn pending_transaction_hashes_stream(
         &'a self
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send + 'a>> + Send;
+    ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>> + Send;
 
     /// `logs`
-    fn log_stream(
-        &'a self,
-        filter: Filter
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Log> + Send + 'a>> + Send;
+    fn log_stream(&'a self, filter: Filter) -> impl Future<Output = eyre::Result<impl Stream<Item = Log> + Send>> + Send;
 }
