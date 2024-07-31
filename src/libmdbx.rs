@@ -13,9 +13,8 @@ use reth_beacon_consensus::EthBeaconConsensus;
 use reth_blockchain_tree::{externals::TreeExternals, BlockchainTree, BlockchainTreeConfig, ShareableBlockchainTree};
 use reth_chainspec::MAINNET;
 use reth_db::{
-    init_db,
     mdbx::{tx::Tx, DatabaseArguments},
-    DatabaseEnv
+    open_db_read_only, DatabaseEnv
 };
 use reth_libmdbx::RO;
 use reth_network_api::noop::NoopNetwork;
@@ -71,7 +70,7 @@ impl RethLibmdbxClient {
     /// executor
     pub fn new(db_path: &str, max_tasks: u64) -> eyre::Result<Self> {
         let db_path = Path::new(&db_path);
-        let db = Arc::new(init_db(db_path, DatabaseArguments::new(Default::default()))?);
+        let db = Arc::new(open_db_read_only(db_path, DatabaseArguments::new(Default::default()))?);
         let mut static_files = db_path.to_path_buf();
         static_files.pop();
         static_files.push("static_files");
@@ -87,7 +86,7 @@ impl RethLibmdbxClient {
         task_executor: T
     ) -> eyre::Result<Self> {
         let db_path = Path::new(&db_path);
-        let db = Arc::new(init_db(db_path, DatabaseArguments::new(Default::default()))?);
+        let db = Arc::new(open_db_read_only(db_path, DatabaseArguments::new(Default::default()))?);
         let mut static_files = db_path.to_path_buf();
         static_files.pop();
         static_files.push("static_files");
