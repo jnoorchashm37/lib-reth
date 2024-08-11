@@ -2,75 +2,67 @@
 name = "lib-reth"
 version = "0.1.0"
 edition = "2021"
-
+rust-version = "1.79"
 
 [lib]
 name = "lib_reth"
 path = "src/lib.rs"
 
 [dependencies]
-
 # reth
-reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", package = "reth-primitives-traits", rev = "390f30a", optional = true }
-reth-provider = { git = "https://github.com/paradigmxyz/reth", package = "reth-provider", rev = "390f30a", optional = true }
-reth-rpc = { git = "https://github.com/paradigmxyz/reth", package = "reth-rpc", rev = "390f30a", optional = true }
-reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", package = "reth-rpc-server-types", rev = "390f30a", optional = true }
-reth-rpc-types-compat = { git = "https://github.com/paradigmxyz/reth", package = "reth-rpc-types-compat", rev = "390f30a", optional = true }
-reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", package = "reth-blockchain-tree", rev = "390f30a", optional = true }
-reth-beacon-consensus = { git = "https://github.com/paradigmxyz/reth", package = "reth-beacon-consensus", rev = "390f30a", optional = true }
-reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", package = "reth-transaction-pool", rev = "390f30a", optional = true }
-reth-tasks = { git = "https://github.com/paradigmxyz/reth", package = "reth-tasks", rev = "390f30a", optional = true }
-reth-network-api = { git = "https://github.com/paradigmxyz/reth", package = "reth-network-api", rev = "390f30a", optional = true }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", package = "reth-node-ethereum", rev = "390f30a", optional = true }
-reth-chainspec = { git = "https://github.com/paradigmxyz/reth", package = "reth-chainspec", rev = "390f30a", optional = true }
-reth-prune-types = { git = "https://github.com/paradigmxyz/reth", package = "reth-prune-types", rev = "390f30a", optional = true }
-reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", package = "reth-rpc-eth-types", rev = "390f30a", optional = true }
-reth-db = { git = "https://github.com/paradigmxyz/reth", package = "reth-db", rev = "390f30a", optional = true }
-reth-db-api = { git = "https://github.com/paradigmxyz/reth", package = "reth-db-api", rev = "390f30a", optional = true }
-reth-storage-errors = { git = "https://github.com/paradigmxyz/reth", package = "reth-storage-errors", rev = "390f30a", optional = true }
-reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", package = "reth-libmdbx", rev = "390f30a", optional = true }
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", default-features = false, optional = true }
+reth-provider = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-rpc = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-rpc-types-compat = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-beacon-consensus = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-tasks = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-network-api = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-prune-types = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-db = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true, features = ["mdbx"] }
+reth-db-api = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-storage-errors = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
+reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", rev = "e24e4c7", optional = true }
 
 
 
 # alloy
-alloy-provider = { version = "0.2", default-features = false, features = ["ipc", "ws", "pubsub", "reqwest"] }
-alloy-rpc-client = { version = "0.2", default-features = false, features = ["ipc", "ws", "pubsub"] }
-alloy-transport = { version = "0.2", default-features = false }
-alloy-json-rpc = { version = "0.2", default-features = false }
-alloy-transport-http = { version = "0.2", default-features = false }
-alloy-pubsub = { version = "0.2", default-features = false }
-alloy-rpc-types = { version = "0.2", default-features = false, features = [
-  "eth",
-] }
-alloy-primitives = { version = "0.7.2", features = ["rlp"] }
-
+alloy-provider = { version = "0.2.1", default-features = false, features = ["ipc", "ws", "pubsub", "reqwest"] }
+alloy-rpc-client = { version = "0.2.1", default-features = false, features = ["ipc", "ws", "pubsub"] }
+alloy-transport = { version = "0.2.1", default-features = false }
+alloy-json-rpc = { version = "0.2.1", default-features = false }
+alloy-transport-http = { version = "0.2.1", default-features = false }
+alloy-pubsub = { version = "0.2.1", default-features = false }
+alloy-rpc-types = { version = "0.2.1", default-features = false, features = ["eth"] }
+alloy-primitives = { version = "0.7.2", default-features = false, features = ["rlp"] }
 
 # async
-tokio = { version = "1.0", features = ["full"] }
-tokio-stream = "0.1"
+tokio = { version = "1.21", features = ["full"] }
+tokio-stream = "0.1.11"
 futures = "0.3"
 
 # misc
 eyre = "0.6.5"
-rayon = "1.10"
-
-
-
+rayon = "1.7"
 
 [features]
 default = ["full"]
 full = ["ipc", "ws", "libmdbx"]
-
 ipc = []
 ws = []
 libmdbx = [
-    "dep:reth-primitives-traits", 
-    "dep:reth-provider", 
-    "dep:reth-rpc", 
+    "dep:reth-primitives-traits",
+    "dep:reth-provider",
+    "dep:reth-rpc",
     "dep:reth-rpc-server-types",
     "dep:reth-rpc-types-compat",
     "dep:reth-blockchain-tree",
-    "dep:reth-beacon-consensus", 
+    "dep:reth-beacon-consensus",
     "dep:reth-transaction-pool",
     "dep:reth-tasks",
     "dep:reth-network-api",
@@ -80,6 +72,6 @@ libmdbx = [
     "dep:reth-rpc-eth-types",
     "dep:reth-db",
     "dep:reth-db-api",
-    "dep:reth-storage-errors", 
+    "dep:reth-storage-errors",
     "dep:reth-libmdbx"
 ]
