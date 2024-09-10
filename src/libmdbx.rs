@@ -18,7 +18,8 @@ use reth_db::{
 };
 use reth_libmdbx::RO;
 use reth_network_api::noop::NoopNetwork;
-use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider};
+use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
+use reth_node_types::NodeTypesWithDBAdapter;
 use reth_primitives_traits::constants::*;
 use reth_provider::{
     providers::{BlockchainProvider, StaticFileProvider},
@@ -43,7 +44,7 @@ use tokio_stream::wrappers::BroadcastStream;
 
 use crate::streams::EthStream;
 
-type RethProvider = BlockchainProvider<Arc<DatabaseEnv>>;
+type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
 type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
 type RethFilter = EthFilter<RethProvider, RethTxPool>;
 type RethTrace = TraceApi<RethProvider, RethApi>;
@@ -130,7 +131,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
                     .blocks_iter()
                     .map(|sealed_block| Block {
                         header:       Header {
-                            hash:                     Some(sealed_block.hash()),
+                            hash:                     sealed_block.hash(),
                             parent_hash:              sealed_block.parent_hash,
                             uncles_hash:              sealed_block.ommers_hash,
                             miner:                    sealed_block.beneficiary,
@@ -139,7 +140,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
                             receipts_root:            sealed_block.receipts_root,
                             logs_bloom:               sealed_block.logs_bloom,
                             difficulty:               sealed_block.difficulty,
-                            number:                   Some(sealed_block.number),
+                            number:                   sealed_block.number,
                             gas_limit:                sealed_block.gas_limit as u128,
                             gas_used:                 sealed_block.gas_used as u128,
                             timestamp:                sealed_block.timestamp,
@@ -167,7 +168,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
                                 .into_iter()
                                 .filter_map(|tx| {
                                     tx.recover_signer().map(|signer| {
-                                        reth_rpc_types_compat::transaction::from_recovered(tx.with_signer(signer))
+                                        reth_rpc_types_compat::transaction::from_recovered(tx.with_signer(signer)).inner
                                     })
                                 })
                                 .collect()
@@ -176,8 +177,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
                         withdrawals:  sealed_block
                             .withdrawals
                             .clone()
-                            .map(|wit| wit.into_iter().collect()),
-                        other:        Default::default()
+                            .map(|wit| wit.into_iter().collect())
                     })
                     .collect::<Vec<_>>();
                 futures::stream::iter(sealed_blocks)
@@ -191,7 +191,9 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
             .api
             .pool()
             .new_pending_pool_transactions_listener()
-            .map(|tx| reth_rpc_types_compat::transaction::from_recovered(tx.transaction.transaction.transaction().clone()));
+            .map(|tx| {
+                reth_rpc_types_compat::transaction::from_recovered(tx.transaction.transaction.transaction().clone()).inner
+            });
 
         Ok(stream)
     }
@@ -240,10 +242,10 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
 ) -> eyre::Result<RethLibmdbxClient> {
     let chain = MAINNET.clone();
     let msg = format!("could not make 'StaticFileProvider' at '{}'", static_files_path.display());
-    let provider_factory = ProviderFactory::new(
+    let provider_factory = ProviderFactory::<NodeTypesWithDBAdapter<_, Arc<DatabaseEnv>>>::new(
         Arc::clone(&db),
         Arc::clone(&chain),
-        StaticFileProvider::read_only(static_files_path).expect(&msg)
+        StaticFileProvider::read_only(static_files_path, true).expect(&msg)
     );
 
     let db_provider = provider_factory.clone().provider()?;
@@ -294,7 +296,6 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
         blocking,
         fee_history,
         EthEvmConfig::default(),
-        None,
         DEFAULT_PROOF_PERMITS
     );
 
