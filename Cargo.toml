@@ -42,6 +42,17 @@ alloy-pubsub = { version = "0.3.3", default-features = false }
 alloy-rpc-types = { version = "0.3.3", default-features = false, features = ["eth"] }
 alloy-primitives = { version = "0.8.0", default-features = false, features = ["rlp"] }
 
+# revm
+revm = { version = "14.0.0", features = [
+    "std",
+    "secp256k1",
+    "blst",
+], default-features = false }
+revm-inspectors = "0.7.1"
+revm-primitives = { version = "9.0.0", features = [
+    "std",
+], default-features = false }
+
 
 # async
 tokio = { version = "1.21", features = ["full"] }
