@@ -10,26 +10,26 @@ path = "src/lib.rs"
 
 [dependencies]
 # reth
-reth = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94" }
-reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", default-features = false, optional = true }
-reth-provider = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-rpc = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-rpc-types-compat = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-beacon-consensus = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-tasks = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-network-api = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-prune-types = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-db = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true, features = ["mdbx"] }
-reth-db-api = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-storage-errors = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
-reth-node-types = { git = "https://github.com/paradigmxyz/reth", rev = "ac5ab94", optional = true }
+reth = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942" }
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", default-features = false, optional = true }
+reth-provider = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-rpc = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-rpc-types-compat = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-beacon-consensus = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-tasks = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-network-api = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-prune-types = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-db = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true, features = ["mdbx"] }
+reth-db-api = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-storage-errors = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
+reth-node-types = { git = "https://github.com/paradigmxyz/reth", rev = "bb18942", optional = true }
 
 
 
