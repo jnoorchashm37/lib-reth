@@ -25,7 +25,6 @@ use reth_provider::{
     providers::{BlockchainProvider, StaticFileProvider},
     CanonStateSubscriptions, DatabaseProvider, ProviderFactory
 };
-use reth_prune_types::PruneModes;
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_types::{
     logs_utils, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasPriceOracle,
@@ -241,6 +240,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
     static_files_path: PathBuf
 ) -> eyre::Result<RethLibmdbxClient> {
     let chain = MAINNET.clone();
+    let evm_config = EthEvmConfig::new(chain.clone());
     let msg = format!("could not make 'StaticFileProvider' at '{}'", static_files_path.display());
     let provider_factory = ProviderFactory::<NodeTypesWithDBAdapter<_, Arc<DatabaseEnv>>>::new(
         Arc::clone(&db),
@@ -258,8 +258,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let tree_config = BlockchainTreeConfig::default();
 
-    let blockchain_tree =
-        ShareableBlockchainTree::new(BlockchainTree::new(tree_externals, tree_config, PruneModes::none())?);
+    let blockchain_tree = ShareableBlockchainTree::new(BlockchainTree::new(tree_externals, tree_config)?);
 
     let provider = BlockchainProvider::new(provider_factory.clone(), Arc::new(blockchain_tree))?;
 
@@ -267,7 +266,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
         provider.clone(),
         EthStateCacheConfig::default(),
         task_executor.clone(),
-        EthEvmConfig::default()
+        evm_config.clone()
     );
 
     let transaction_validator = EthTransactionValidatorBuilder::new(chain.clone()).build_with_tasks(
@@ -281,7 +280,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let blocking = BlockingTaskPool::build()?;
     let eth_state_config = EthStateCacheConfig::default();
     let fee_history = FeeHistoryCache::new(
-        EthStateCache::spawn_with(provider.clone(), eth_state_config, task_executor.clone(), EthEvmConfig::default()),
+        EthStateCache::spawn_with(provider.clone(), eth_state_config, task_executor.clone(), evm_config.clone()),
         FeeHistoryCacheConfig::default()
     );
 
@@ -295,7 +294,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
         DEFAULT_ETH_PROOF_WINDOW,
         blocking,
         fee_history,
-        EthEvmConfig::default(),
+        evm_config.clone(),
         DEFAULT_PROOF_PERMITS
     );
 
