@@ -6,12 +6,13 @@ use std::{
 use alloy_primitives::{TxHash, U256};
 use alloy_rpc_types::{
     eth::{Block, Filter, Log, Transaction},
+    simulate::MAX_SIMULATE_BLOCKS,
     BlockTransactions, FilteredParams, Header
 };
 use futures::{Stream, StreamExt};
 use reth_beacon_consensus::EthBeaconConsensus;
 use reth_blockchain_tree::{externals::TreeExternals, BlockchainTree, BlockchainTreeConfig, ShareableBlockchainTree};
-use reth_chainspec::MAINNET;
+use reth_chainspec::{ChainSpec, MAINNET};
 use reth_db::{
     mdbx::{tx::Tx, DatabaseArguments},
     open_db_read_only, DatabaseEnv
@@ -48,7 +49,7 @@ type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
 type RethFilter = EthFilter<RethProvider, RethTxPool>;
 type RethTrace = TraceApi<RethProvider, RethApi>;
 type RethDebug = DebugApi<RethProvider, RethApi>;
-type RethDbProvider = DatabaseProvider<Tx<RO>>;
+type RethDbProvider = DatabaseProvider<Tx<RO>, ChainSpec>;
 type RethTxPool = Pool<
     TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
     CoinbaseTipOrdering<EthPooledTransaction>,
@@ -291,6 +292,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
         state_cache.clone(),
         GasPriceOracle::new(provider.clone(), GasPriceOracleConfig::default(), state_cache.clone()),
         ETHEREUM_BLOCK_GAS_LIMIT,
+        MAX_SIMULATE_BLOCKS,
         DEFAULT_ETH_PROOF_WINDOW,
         blocking,
         fee_history,
