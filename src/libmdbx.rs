@@ -46,9 +46,9 @@ use crate::streams::EthStream;
 
 type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
 type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
-type RethFilter = EthFilter<RethProvider, RethTxPool>;
+type RethFilter = EthFilter<RethProvider, RethTxPool, RethApi>;
 type RethTrace = TraceApi<RethProvider, RethApi>;
-type RethDebug = DebugApi<RethProvider, RethApi>;
+type RethDebug = DebugApi<RethProvider, RethApi, EthExecutorProvider>;
 type RethDbProvider = DatabaseProvider<Tx<RO>, ChainSpec>;
 type RethTxPool = Pool<
     TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
@@ -141,21 +141,22 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
                             logs_bloom:               sealed_block.logs_bloom,
                             difficulty:               sealed_block.difficulty,
                             number:                   sealed_block.number,
-                            gas_limit:                sealed_block.gas_limit as u128,
-                            gas_used:                 sealed_block.gas_used as u128,
+                            gas_limit:                sealed_block.gas_limit,
+                            gas_used:                 sealed_block.gas_used,
                             timestamp:                sealed_block.timestamp,
                             total_difficulty:         Some(sealed_block.difficulty),
                             extra_data:               sealed_block.extra_data.clone(),
                             mix_hash:                 Some(sealed_block.mix_hash),
                             nonce:                    Some(sealed_block.nonce.into()),
-                            base_fee_per_gas:         sealed_block.base_fee_per_gas.map(|v| v as u128),
+                            base_fee_per_gas:         sealed_block.base_fee_per_gas,
                             withdrawals_root:         sealed_block.withdrawals_root,
-                            blob_gas_used:            sealed_block.blob_gas_used.map(|v| v as u128),
-                            excess_blob_gas:          sealed_block.excess_blob_gas.map(|v| v as u128),
+                            blob_gas_used:            sealed_block.blob_gas_used,
+                            excess_blob_gas:          sealed_block.excess_blob_gas,
                             parent_beacon_block_root: sealed_block.parent_beacon_block_root,
                             requests_root:            sealed_block.requests_root
                         },
                         uncles:       sealed_block
+                            .body
                             .ommers
                             .clone()
                             .into_iter()
@@ -164,17 +165,20 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
                         transactions: BlockTransactions::Full(
                             sealed_block
                                 .body
+                                .transactions
                                 .clone()
                                 .into_iter()
                                 .filter_map(|tx| {
                                     tx.recover_signer().map(|signer| {
-                                        reth_rpc_types_compat::transaction::from_recovered(tx.with_signer(signer)).inner
+                                        reth_rpc_types_compat::transaction::from_recovered::<()>(tx.with_signer(signer))
+                                            .inner
                                     })
                                 })
                                 .collect()
                         ),
                         size:         Some(U256::from(sealed_block.size())),
                         withdrawals:  sealed_block
+                            .body
                             .withdrawals
                             .clone()
                             .map(|wit| wit.into_iter().collect())
@@ -192,7 +196,8 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
             .pool()
             .new_pending_pool_transactions_listener()
             .map(|tx| {
-                reth_rpc_types_compat::transaction::from_recovered(tx.transaction.transaction.transaction().clone()).inner
+                reth_rpc_types_compat::transaction::from_recovered::<()>(tx.transaction.transaction.transaction().clone())
+                    .inner
             });
 
         Ok(stream)
@@ -303,8 +308,10 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let blocking_task_guard = BlockingTaskGuard::new(10);
 
     let tracing_call_guard = BlockingTaskGuard::new(max_tasks as usize);
+    let provider_executor = EthExecutorProvider::ethereum(chain.clone());
+
     let trace = TraceApi::new(provider.clone(), api.clone(), tracing_call_guard);
-    let debug = DebugApi::new(provider.clone(), api.clone(), blocking_task_guard);
+    let debug = DebugApi::new(provider.clone(), api.clone(), blocking_task_guard, provider_executor);
     let filter = EthFilter::new(
         provider.clone(),
         tx_pool.clone(),
