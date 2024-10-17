@@ -42,7 +42,7 @@ use reth_transaction_pool::{
 };
 use tokio_stream::wrappers::BroadcastStream;
 
-use crate::streams::EthStream;
+use crate::traits::EthStream;
 
 type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
 type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
@@ -119,8 +119,8 @@ impl RethLibmdbxClient {
     }
 }
 
-impl<'a> EthStream<'a> for RethLibmdbxClient {
-    async fn block_stream(&'a self) -> eyre::Result<impl Stream<Item = Block> + Send> {
+impl EthStream for RethLibmdbxClient {
+    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Block> + Send> {
         let stream = self
             .api
             .provider()
@@ -190,7 +190,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn full_pending_transaction_stream(&'a self) -> eyre::Result<impl Stream<Item = Transaction> + Send> {
+    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Transaction> + Send> {
         let stream = self
             .api
             .pool()
@@ -203,7 +203,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn pending_transaction_hashes_stream(&'a self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
+    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
         let stream = self
             .api
             .pool()
@@ -213,7 +213,7 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn log_stream(&'a self, filter: Filter) -> eyre::Result<impl Stream<Item = Log> + Send> {
+    async fn log_stream(&self, filter: Filter) -> eyre::Result<impl Stream<Item = Log> + Send> {
         let stream = BroadcastStream::new(self.api.provider().subscribe_to_canonical_state())
             .map(move |canon_state| {
                 canon_state
@@ -235,6 +235,17 @@ impl<'a> EthStream<'a> for RethLibmdbxClient {
             });
 
         Ok(stream)
+    }
+}
+
+#[cfg(feature = "revm")]
+impl crate::traits::EthRevm for RethLibmdbxClient {
+    type InnerDb = reth_revm_utils::RethLibmdbxDatabaseRef;
+
+    fn make_inner_db(&self) -> eyre::Result<Self::InnerDb> {
+        use reth_rpc_eth_api::helpers::state::LoadState;
+        let this = reth_revm::database::StateProviderDatabase::new(self.eth_api().state_at_block_id(0.into())?);
+        Ok(RethLibmdbxDatabaseRef::new(this))
     }
 }
 
