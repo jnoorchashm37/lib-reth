@@ -240,12 +240,12 @@ impl EthStream for RethLibmdbxClient {
 
 #[cfg(feature = "revm")]
 impl crate::traits::EthRevm for RethLibmdbxClient {
-    type InnerDb = reth_revm_utils::RethLibmdbxDatabaseRef;
+    type InnerDb = crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef;
 
     fn make_inner_db(&self) -> eyre::Result<Self::InnerDb> {
-        use reth_rpc_eth_api::helpers::state::LoadState;
-        let this = reth_revm::database::StateProviderDatabase::new(self.eth_api().state_at_block_id(0.into())?);
-        Ok(RethLibmdbxDatabaseRef::new(this))
+        let state = reth_rpc_eth_api::helpers::state::LoadState::state_at_block_id(&self.eth_api(), 0.into())?;
+        let this = reth_revm::database::StateProviderDatabase::new(state);
+        Ok(crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef::new(this))
     }
 }
 
