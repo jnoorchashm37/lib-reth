@@ -37,8 +37,8 @@ pub trait AsyncEthRevm {
         Ok(CacheDB::new(self.make_inner_db(block_number)?))
     }
 
-    /// `makes a new cache db`
-    fn make_empty_evm(
+    /// `makes a new evm with a cache db`
+    fn make_evm(
         &self,
         block_number: u64
     ) -> eyre::Result<Evm<'_, EthereumWiring<CacheDB<WrapDatabaseAsync<Self::InnerDb>>, ()>>> {
