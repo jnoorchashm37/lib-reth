@@ -20,7 +20,10 @@ pub trait EthRevm {
     /// `makes a new cache db`
     fn make_empty_evm(&self, block_number: u64) -> eyre::Result<Evm<'_, EthereumWiring<CacheDB<Self::InnerDb>, ()>>> {
         let cache = self.make_cache_db(block_number)?;
-        let evm = Evm::builder().with_db(cache).build();
+        let evm = Evm::builder()
+            .with_external_context(())
+            .with_db(cache)
+            .build();
         Ok(evm)
     }
 }
