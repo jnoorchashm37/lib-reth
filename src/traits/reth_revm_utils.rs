@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use alloy_primitives::{Address, B256, U256};
-use reth_provider::StateProvider;
+use reth_provider::{ProviderError, StateProvider};
 use reth_revm::database::StateProviderDatabase;
 use revm::{
     bytecode::{
@@ -22,7 +22,7 @@ impl RethLibmdbxDatabaseRef {
 }
 
 impl DatabaseRef for RethLibmdbxDatabaseRef {
-    type Error = Box<dyn std::error::Error>;
+    type Error = ProviderError;
 
     fn basic_ref(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
         Ok(reth_revm::DatabaseRef::basic_ref(&self.0, address)?.map(|acct| AccountInfo {
