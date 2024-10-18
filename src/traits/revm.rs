@@ -30,19 +30,28 @@ pub trait AsyncEthRevm {
     type InnerDb: DatabaseAsyncRef;
 
     /// `makes the inner database fetcher`
-    fn make_inner_db(&self, block_number: u64) -> eyre::Result<WrapDatabaseAsync<Self::InnerDb>>;
+    fn make_inner_db(
+        &self,
+        block_number: u64,
+        handle: tokio::runtime::Handle
+    ) -> eyre::Result<WrapDatabaseAsync<Self::InnerDb>>;
 
     /// `makes a new cache db`
-    fn make_cache_db(&self, block_number: u64) -> eyre::Result<CacheDB<WrapDatabaseAsync<Self::InnerDb>>> {
-        Ok(CacheDB::new(self.make_inner_db(block_number)?))
+    fn make_cache_db(
+        &self,
+        block_number: u64,
+        handle: tokio::runtime::Handle
+    ) -> eyre::Result<CacheDB<WrapDatabaseAsync<Self::InnerDb>>> {
+        Ok(CacheDB::new(self.make_inner_db(block_number, handle)?))
     }
 
     /// `makes a new evm with a cache db`
     fn make_evm(
         &self,
-        block_number: u64
+        block_number: u64,
+        handle: tokio::runtime::Handle
     ) -> eyre::Result<Evm<'_, EthereumWiring<CacheDB<WrapDatabaseAsync<Self::InnerDb>>, ()>>> {
-        let cache = self.make_cache_db(block_number)?;
+        let cache = self.make_cache_db(block_number, handle)?;
         let evm = Evm::builder().with_db(cache).build();
         Ok(evm)
     }

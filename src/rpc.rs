@@ -103,8 +103,11 @@ where
 {
     type InnerDb = AlloyDB<T, alloy_network::Ethereum, RootProvider<T>>;
 
-    fn make_inner_db(&self, block_number: u64) -> eyre::Result<WrapDatabaseAsync<Self::InnerDb>> {
-        WrapDatabaseAsync::new(AlloyDB::new(self.provider.clone(), block_number.into()))
-            .ok_or(eyre::eyre!("failed to WrapDatabaseAsync::new() AlloyDb"))
+    fn make_inner_db(
+        &self,
+        block_number: u64,
+        handle: tokio::runtime::Handle
+    ) -> eyre::Result<WrapDatabaseAsync<Self::InnerDb>> {
+        Ok(WrapDatabaseAsync::with_handle(AlloyDB::new(self.provider.clone(), block_number.into()), handle))
     }
 }
