@@ -22,7 +22,7 @@ impl RethLibmdbxDatabaseRef {
 }
 
 impl DatabaseRef for RethLibmdbxDatabaseRef {
-    type Error = eyre::ErrReport;
+    type Error = Box<dyn std::error::Error>;
 
     fn basic_ref(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
         Ok(reth_revm::DatabaseRef::basic_ref(&self.0, address)?.map(|acct| AccountInfo {
