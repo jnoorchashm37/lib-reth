@@ -52,7 +52,10 @@ pub trait AsyncEthRevm {
         handle: tokio::runtime::Handle
     ) -> eyre::Result<Evm<'_, EthereumWiring<CacheDB<WrapDatabaseAsync<Self::InnerDb>>, ()>>> {
         let cache = self.make_cache_db(block_number, handle)?;
-        let evm = Evm::builder().with_db(cache).build();
+        let evm = Evm::builder()
+            .with_external_context(())
+            .with_db(cache)
+            .build();
         Ok(evm)
     }
 }
