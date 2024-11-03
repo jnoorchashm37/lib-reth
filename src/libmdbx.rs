@@ -56,6 +56,48 @@ type RethTxPool = Pool<
     NoopBlobStore
 >;
 
+#[derive(Debug, Clone)]
+pub struct RethLibmdbxClientBuilder<T = TokioTaskExecutor> {
+    db_path:       String,
+    max_tasks:     usize,
+    db_args:       Option<DatabaseArguments>,
+    task_executor: Option<T>
+}
+
+impl<T: TaskSpawner + Clone + 'static> RethLibmdbxClientBuilder<T> {
+    pub fn new(db_path: &str, max_tasks: usize) -> Self {
+        Self { db_path: db_path.to_string(), max_tasks, db_args: None, task_executor: None }
+    }
+
+    pub fn with_db_args(mut self, db_args: DatabaseArguments) -> Self {
+        self.db_args = Some(db_args);
+        self
+    }
+
+    pub fn with_task_executor(mut self, task_executor: T) -> Self {
+        self.task_executor = Some(task_executor);
+        self
+    }
+
+    pub fn build(self) -> eyre::Result<RethLibmdbxClient> {
+        let db_path = Path::new(&self.db_path);
+        let db = Arc::new(open_db_read_only(
+            db_path,
+            self.db_args
+                .unwrap_or(DatabaseArguments::new(Default::default()))
+        )?);
+        let mut static_files = db_path.to_path_buf();
+        static_files.pop();
+        static_files.push("static_files");
+
+        if let Some(executor) = self.task_executor {
+            new_with_db(db, self.max_tasks, executor, static_files)
+        } else {
+            new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files)
+        }
+    }
+}
+
 /// direct libmdbx database connection to a reth node
 pub struct RethLibmdbxClient {
     api:         RethApi,
@@ -67,33 +109,6 @@ pub struct RethLibmdbxClient {
 }
 
 impl RethLibmdbxClient {
-    /// initializes the reth api with the default [TokioTaskExecutor] task
-    /// executor
-    pub fn new(db_path: &str, max_tasks: u64) -> eyre::Result<Self> {
-        let db_path = Path::new(&db_path);
-        let db = Arc::new(open_db_read_only(db_path, DatabaseArguments::new(Default::default()))?);
-        let mut static_files = db_path.to_path_buf();
-        static_files.pop();
-        static_files.push("static_files");
-
-        let executor = TokioTaskExecutor::default();
-        new_with_db(db, max_tasks, executor, static_files)
-    }
-
-    /// initializes the reth api with a specific task executor
-    pub fn new_with_executor<T: TaskSpawner + Clone + 'static>(
-        db_path: &str,
-        max_tasks: u64,
-        task_executor: T
-    ) -> eyre::Result<Self> {
-        let db_path = Path::new(&db_path);
-        let db = Arc::new(open_db_read_only(db_path, DatabaseArguments::new(Default::default()))?);
-        let mut static_files = db_path.to_path_buf();
-        static_files.pop();
-        static_files.push("static_files");
-        new_with_db(db, max_tasks, task_executor, static_files)
-    }
-
     pub fn eth_api(&self) -> RethApi {
         self.api.clone()
     }
@@ -252,7 +267,7 @@ impl crate::traits::EthRevm for RethLibmdbxClient {
 /// spawns the reth libmdbx client
 fn new_with_db<T: TaskSpawner + Clone + 'static>(
     db: Arc<DatabaseEnv>,
-    max_tasks: u64,
+    max_tasks: usize,
     task_executor: T,
     static_files_path: PathBuf
 ) -> eyre::Result<RethLibmdbxClient> {
@@ -318,7 +333,7 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let blocking_task_guard = BlockingTaskGuard::new(10);
 
-    let tracing_call_guard = BlockingTaskGuard::new(max_tasks as usize);
+    let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
     let provider_executor = EthExecutorProvider::ethereum(chain.clone());
 
     let trace = TraceApi::new(provider.clone(), api.clone(), tracing_call_guard);
