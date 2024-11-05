@@ -362,9 +362,9 @@ mod tests {
 
     use super::*;
 
-    #[test]
+    #[tokio::test]
     #[serial_test::serial]
-    fn can_build() {
+    async fn can_build() {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         assert!(builder.build().is_ok())
     }
