@@ -338,12 +338,10 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
         DEFAULT_PROOF_PERMITS
     );
 
-    let blocking_task_guard = BlockingTaskGuard::new(10);
-
-    let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
+    let blocking_task_guard = BlockingTaskGuard::new(max_tasks);
     let provider_executor = EthExecutorProvider::ethereum(chain.clone());
 
-    let trace = TraceApi::new(provider.clone(), api.clone(), tracing_call_guard);
+    let trace = TraceApi::new(provider.clone(), api.clone(), blocking_task_guard.clone());
     let debug = DebugApi::new(provider.clone(), api.clone(), blocking_task_guard, provider_executor);
     let filter = EthFilter::new(
         provider.clone(),
