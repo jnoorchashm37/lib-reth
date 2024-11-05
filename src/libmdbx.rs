@@ -371,7 +371,7 @@ mod tests {
     #[serial_test::serial]
     async fn can_stream() {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
-        let client = builder.build().unwrap();
+        let client = Box::leak(Box::new(builder.build().unwrap()));
 
         let mut stream = client.block_stream().await.unwrap();
         let (tx, rx) = oneshot::channel();
