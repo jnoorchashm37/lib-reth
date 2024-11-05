@@ -60,6 +60,13 @@ futures = "0.3"
 eyre = "0.6.5"
 rayon = "1.7"
 
+
+
+[dev-dependencies]
+tokio-stream = "0.1"
+
+
+
 [features]
 default = ["full"]
 full = ["ipc", "ws", "reth-libmdbx-revm"]

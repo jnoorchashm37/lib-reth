@@ -355,3 +355,35 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     Ok(RethLibmdbxClient { api, trace, filter, debug, db_provider, tx_pool })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_build() {
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth", 1000);
+        assert!(builder.build().is_ok())
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 3)]
+    async fn can_stream() {
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth", 1000);
+        let client = builder.build().unwrap();
+
+        let mut stream = BroadcastStream::new(client.eth_api().provider().subscribe_to_canonical_state()).take(3);
+
+        while let Some(Ok(notification)) = stream.next().await {
+            println!("new");
+            match notification {
+                reth_provider::CanonStateNotification::Reorg { old, new } => {
+                    dbg!(old);
+                    dbg!(new);
+                }
+                reth_provider::CanonStateNotification::Commit { new } => {
+                    dbg!(new);
+                }
+            }
+        }
+    }
+}
