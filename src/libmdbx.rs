@@ -358,32 +358,52 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
 #[cfg(test)]
 mod tests {
+    use tokio::sync::oneshot;
+
     use super::*;
 
     #[test]
+    #[serial_test::serial]
     fn can_build() {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         assert!(builder.build().is_ok())
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 3)]
+    #[serial_test::serial]
     async fn can_stream() {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         let client = builder.build().unwrap();
 
         let mut stream = BroadcastStream::new(client.eth_api().provider().subscribe_to_canonical_state()).take(3);
+        let (tx, rx) = oneshot::channel();
 
-        while let Some(Ok(notification)) = stream.next().await {
-            println!("new");
-            match notification {
-                reth_provider::CanonStateNotification::Reorg { old, new } => {
-                    dbg!(old);
-                    dbg!(new);
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+
+            let f = async move {
+                while let Some(Ok(notification)) = stream.next().await {
+                    println!("new");
+                    match notification {
+                        reth_provider::CanonStateNotification::Reorg { old, new } => {
+                            dbg!(old);
+                            dbg!(new);
+                        }
+                        reth_provider::CanonStateNotification::Commit { new } => {
+                            dbg!(new);
+                        }
+                    }
                 }
-                reth_provider::CanonStateNotification::Commit { new } => {
-                    dbg!(new);
-                }
-            }
-        }
+            };
+
+            rt.block_on(f);
+
+            tx.send(())
+        });
+
+        rx.await.unwrap();
     }
 }

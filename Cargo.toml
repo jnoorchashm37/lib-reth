@@ -64,6 +64,7 @@ rayon = "1.7"
 
 [dev-dependencies]
 tokio-stream = "0.1"
+serial_test = "3.1"
 
 
 
