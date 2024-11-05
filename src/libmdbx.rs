@@ -385,6 +385,7 @@ mod tests {
                 .unwrap();
 
             let f = async move {
+                println!("starting stream");
                 while let Some(Ok(notification)) = stream.next().await {
                     println!("new");
                     match notification {
