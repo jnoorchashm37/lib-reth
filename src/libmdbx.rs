@@ -362,13 +362,13 @@ mod tests {
 
     #[test]
     fn can_build() {
-        let builder = RethLibmdbxClientBuilder::new("/home/data/reth", 1000);
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         assert!(builder.build().is_ok())
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 3)]
     async fn can_stream() {
-        let builder = RethLibmdbxClientBuilder::new("/home/data/reth", 1000);
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         let client = builder.build().unwrap();
 
         let mut stream = BroadcastStream::new(client.eth_api().provider().subscribe_to_canonical_state()).take(3);
