@@ -373,7 +373,7 @@ mod tests {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         let client = builder.build().unwrap();
 
-        let mut stream = client.eth_api().provider().canonical_state_stream().take(3);
+        let mut stream = client.block_stream().await.unwrap();
         let (tx, rx) = oneshot::channel();
 
         std::thread::spawn(move || {
@@ -386,15 +386,15 @@ mod tests {
                 println!("starting stream");
                 while let Some(notification) = stream.next().await {
                     println!("new");
-                    match notification {
-                        reth_provider::CanonStateNotification::Reorg { old, new } => {
-                            dbg!(old);
-                            dbg!(new);
-                        }
-                        reth_provider::CanonStateNotification::Commit { new } => {
-                            dbg!(new);
-                        }
-                    }
+                    // match notification {
+                    //     reth_provider::CanonStateNotification::Reorg { old,
+                    // new } => {         dbg!(old);
+                    //         dbg!(new);
+                    //     }
+                    //     reth_provider::CanonStateNotification::Commit { new }
+                    // => {         dbg!(new);
+                    //     }
+                    // }
                 }
             };
 
