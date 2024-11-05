@@ -356,8 +356,6 @@ fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
 #[cfg(test)]
 mod tests {
-    use futures::FutureExt;
-    use tokio::sync::oneshot;
 
     use super::*;
 
@@ -372,23 +370,13 @@ mod tests {
     #[serial_test::serial]
     async fn can_stream() {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
-        let client = Box::leak(Box::new(builder.build().unwrap()));
+        let client = builder.build().unwrap();
 
-        let mut stream = client.block_stream().await.unwrap();
+        let mut stream = client.eth_api().provider().canonical_state_stream().take(2);
 
-        std::future::poll_fn(|cx| {
-            let mut i = 3;
+        let f = async { while let Some(_) = stream.next().await {} };
 
-            loop {
-                if stream.next().poll_unpin(cx).is_ready() {
-                    i -= 1;
-                }
-
-                if i == 0 {
-                    return std::task::Poll::Ready(())
-                }
-            }
-        })
-        .await;
+        let timeout = tokio::time::timeout(std::time::Duration::from_secs(30), f).await;
+        assert!(timeout.is_ok());
     }
 }
