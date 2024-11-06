@@ -385,12 +385,12 @@ mod tests {
         // assert!(stream_timeout(block_stream, 2, 30).await.is_ok());
 
         let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
-        assert!(stream_timeout(mempool_hash_stream, 5, 30).await.is_ok());
+        assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
 
         let mempool_full_stream = client.full_pending_transaction_stream().await.unwrap();
-        assert!(stream_timeout(mempool_full_stream, 5, 30).await.is_ok());
+        assert!(stream_timeout(mempool_full_stream, 2, 30).await.is_ok());
 
         let log_stream = client.log_stream(Filter::new()).await.unwrap();
-        assert!(stream_timeout(log_stream, 5, 30).await.is_ok());
+        assert!(stream_timeout(log_stream, 2, 30).await.is_ok());
     }
 }
