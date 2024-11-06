@@ -1,48 +1,31 @@
-use std::{
-    path::{Path, PathBuf},
-    sync::Arc
-};
+mod init;
+
+use std::sync::Arc;
 
 use alloy_primitives::{TxHash, U256};
 use alloy_rpc_types::{
     eth::{Block, Filter, Log, Transaction},
-    simulate::MAX_SIMULATE_BLOCKS,
     BlockTransactions, FilteredParams, Header
 };
 use futures::{Stream, StreamExt};
-use reth_beacon_consensus::EthBeaconConsensus;
-use reth_blockchain_tree::{externals::TreeExternals, BlockchainTree, BlockchainTreeConfig, ShareableBlockchainTree};
-use reth_chainspec::{ChainSpec, MAINNET};
-use reth_db::{
-    mdbx::{tx::Tx, DatabaseArguments},
-    open_db_read_only, DatabaseEnv
-};
+use reth_chainspec::ChainSpec;
+use reth_db::{mdbx::tx::Tx, DatabaseEnv};
 use reth_libmdbx::RO;
 use reth_network_api::noop::NoopNetwork;
 use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
 use reth_node_types::NodeTypesWithDBAdapter;
-use reth_primitives_traits::constants::*;
-use reth_provider::{
-    providers::{BlockchainProvider, StaticFileProvider},
-    CanonStateSubscriptions, DatabaseProvider, ProviderFactory
-};
+use reth_provider::{providers::BlockchainProvider, CanonStateSubscriptions, DatabaseProvider};
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
-use reth_rpc_eth_types::{
-    logs_utils, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasPriceOracle,
-    GasPriceOracleConfig
-};
-use reth_rpc_server_types::constants::{DEFAULT_ETH_PROOF_WINDOW, DEFAULT_PROOF_PERMITS};
-use reth_tasks::{
-    pool::{BlockingTaskGuard, BlockingTaskPool},
-    TaskSpawner, TokioTaskExecutor
-};
+use reth_rpc_eth_types::logs_utils;
 use reth_transaction_pool::{
-    blobstore::NoopBlobStore, validate::EthTransactionValidatorBuilder, CoinbaseTipOrdering, EthPooledTransaction,
-    EthTransactionValidator, Pool, TransactionPool, TransactionValidationTaskExecutor
+    blobstore::NoopBlobStore, CoinbaseTipOrdering, EthPooledTransaction, EthTransactionValidator, Pool, TransactionPool,
+    TransactionValidationTaskExecutor
 };
 use tokio_stream::wrappers::BroadcastStream;
 
 use crate::traits::EthStream;
+mod builder;
+pub use builder::*;
 
 type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
 type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
@@ -55,55 +38,6 @@ type RethTxPool = Pool<
     CoinbaseTipOrdering<EthPooledTransaction>,
     NoopBlobStore
 >;
-
-#[derive(Debug, Clone)]
-pub struct RethLibmdbxClientBuilder {
-    db_path:   String,
-    max_tasks: usize,
-    db_args:   Option<DatabaseArguments>
-}
-
-impl RethLibmdbxClientBuilder {
-    pub fn new(db_path: &str, max_tasks: usize) -> Self {
-        Self { db_path: db_path.to_string(), max_tasks, db_args: None }
-    }
-
-    pub fn with_db_args(mut self, db_args: DatabaseArguments) -> Self {
-        self.db_args = Some(db_args);
-        self
-    }
-
-    pub fn build(self) -> eyre::Result<RethLibmdbxClient> {
-        let db_path = Path::new(&self.db_path);
-        let db = Arc::new(open_db_read_only(
-            db_path,
-            self.db_args
-                .unwrap_or(DatabaseArguments::new(Default::default()))
-        )?);
-        let mut static_files = db_path.to_path_buf();
-        static_files.pop();
-        static_files.push("static_files");
-
-        new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files)
-    }
-
-    pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
-        self,
-        task_executor: T
-    ) -> eyre::Result<RethLibmdbxClient> {
-        let db_path = Path::new(&self.db_path);
-        let db = Arc::new(open_db_read_only(
-            db_path,
-            self.db_args
-                .unwrap_or(DatabaseArguments::new(Default::default()))
-        )?);
-        let mut static_files = db_path.to_path_buf();
-        static_files.pop();
-        static_files.push("static_files");
-
-        new_with_db(db, self.max_tasks, task_executor, static_files)
-    }
-}
 
 /// direct libmdbx database connection to a reth node
 pub struct RethLibmdbxClient {
@@ -269,89 +203,6 @@ impl crate::traits::EthRevm for RethLibmdbxClient {
         let this = reth_revm::database::StateProviderDatabase::new(state);
         Ok(crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef::new(this))
     }
-}
-
-/// spawns the reth libmdbx client
-fn new_with_db<T: TaskSpawner + Clone + 'static>(
-    db: Arc<DatabaseEnv>,
-    max_tasks: usize,
-    task_executor: T,
-    static_files_path: PathBuf
-) -> eyre::Result<RethLibmdbxClient> {
-    let chain = MAINNET.clone();
-    let evm_config = EthEvmConfig::new(chain.clone());
-    let msg = format!("could not make 'StaticFileProvider' at '{}'", static_files_path.display());
-    let provider_factory = ProviderFactory::<NodeTypesWithDBAdapter<_, Arc<DatabaseEnv>>>::new(
-        Arc::clone(&db),
-        Arc::clone(&chain),
-        StaticFileProvider::read_only(static_files_path, true).expect(&msg)
-    );
-
-    let db_provider = provider_factory.clone().provider()?;
-
-    let tree_externals = TreeExternals::new(
-        provider_factory.clone(),
-        Arc::new(EthBeaconConsensus::new(Arc::clone(&chain))),
-        EthExecutorProvider::ethereum(chain.clone())
-    );
-
-    let tree_config = BlockchainTreeConfig::default();
-
-    let blockchain_tree = ShareableBlockchainTree::new(BlockchainTree::new(tree_externals, tree_config)?);
-
-    let provider = BlockchainProvider::new(provider_factory.clone(), Arc::new(blockchain_tree))?;
-
-    let state_cache = EthStateCache::spawn_with(
-        provider.clone(),
-        EthStateCacheConfig::default(),
-        task_executor.clone(),
-        evm_config.clone()
-    );
-
-    let transaction_validator = EthTransactionValidatorBuilder::new(chain.clone()).build_with_tasks(
-        provider.clone(),
-        task_executor.clone(),
-        NoopBlobStore::default()
-    );
-
-    let tx_pool = reth_transaction_pool::Pool::eth_pool(transaction_validator, NoopBlobStore::default(), Default::default());
-
-    let blocking = BlockingTaskPool::build()?;
-    let eth_state_config = EthStateCacheConfig::default();
-    let fee_history = FeeHistoryCache::new(
-        EthStateCache::spawn_with(provider.clone(), eth_state_config, task_executor.clone(), evm_config.clone()),
-        FeeHistoryCacheConfig::default()
-    );
-
-    let api = EthApi::new(
-        provider.clone(),
-        tx_pool.clone(),
-        NoopNetwork::default(),
-        state_cache.clone(),
-        GasPriceOracle::new(provider.clone(), GasPriceOracleConfig::default(), state_cache.clone()),
-        ETHEREUM_BLOCK_GAS_LIMIT,
-        MAX_SIMULATE_BLOCKS,
-        DEFAULT_ETH_PROOF_WINDOW,
-        blocking,
-        fee_history,
-        evm_config.clone(),
-        DEFAULT_PROOF_PERMITS
-    );
-
-    let blocking_task_guard = BlockingTaskGuard::new(max_tasks);
-    let provider_executor = EthExecutorProvider::ethereum(chain.clone());
-
-    let trace = TraceApi::new(provider.clone(), api.clone(), blocking_task_guard.clone());
-    let debug = DebugApi::new(provider.clone(), api.clone(), blocking_task_guard, provider_executor);
-    let filter = EthFilter::new(
-        provider.clone(),
-        tx_pool.clone(),
-        state_cache,
-        EthFilterConfig::default(),
-        Box::new(task_executor.clone())
-    );
-
-    Ok(RethLibmdbxClient { api, trace, filter, debug, db_provider, tx_pool })
 }
 
 #[cfg(test)]

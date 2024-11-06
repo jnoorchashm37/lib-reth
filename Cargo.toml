@@ -10,6 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # reth
+reth = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
 reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", default-features = false, optional = true }
 reth-provider = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
 reth-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
@@ -30,6 +31,13 @@ reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0",
 reth-revm = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
 reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
 reth-node-types = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+reth-engine-local = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+reth-payload-builder = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+reth-node-builder =  { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+reth-cli = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+reth-prune = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+reth-config = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0", optional = true }
+
 
 # alloy
 alloy-provider = { version = "0.4.2", default-features = false, features = ["ipc", "ws", "pubsub", "reqwest"] }
@@ -59,6 +67,7 @@ futures = "0.3"
 # misc
 eyre = "0.6.5"
 rayon = "1.7"
+clap = { version = "4.4.8", optional = true }
 
 
 
@@ -97,6 +106,14 @@ libmdbx = [
     "dep:reth-db-api",
     "dep:reth-storage-errors",
     "dep:reth-libmdbx",
-    "dep:reth-node-types"
+    "dep:reth-node-types",
+    "dep:reth-engine-local",
+    "dep:reth-payload-builder",
+    "dep:reth-node-builder",
+    "dep:reth-cli",
+    "dep:reth",
+    "dep:clap",
+    "dep:reth-prune",
+    "dep:reth-config"
 ]
 
