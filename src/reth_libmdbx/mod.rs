@@ -2,23 +2,27 @@ mod init;
 
 use std::sync::Arc;
 
-use alloy_primitives::{TxHash, U256};
+use alloy_primitives::TxHash;
 use alloy_rpc_types::{
     eth::{Block, Filter, Log, Transaction},
     BlockTransactions, FilteredParams, Header
 };
 use futures::{Stream, StreamExt};
+use reth::{core::exit::NodeExitFuture, network::NetworkHandle};
 use reth_chainspec::ChainSpec;
 use reth_db::{mdbx::tx::Tx, DatabaseEnv};
 use reth_libmdbx::RO;
 use reth_network_api::noop::NoopNetwork;
-use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
+use reth_node_ethereum::{
+    BasicBlockExecutorProvider, EthEvmConfig, EthExecutionStrategyFactory, EthExecutorProvider, EthereumNode
+};
 use reth_node_types::NodeTypesWithDBAdapter;
 use reth_provider::{providers::BlockchainProvider, CanonStateSubscriptions, DatabaseProvider};
-use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
+use reth_rpc::{eth::EthTxBuilder, DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_types::logs_utils;
 use reth_transaction_pool::{
-    blobstore::NoopBlobStore, CoinbaseTipOrdering, EthPooledTransaction, EthTransactionValidator, Pool, TransactionPool,
+    blobstore::{DiskFileBlobStore, NoopBlobStore},
+    CoinbaseTipOrdering, EthPooledTransaction, EthTransactionValidator, Pool, TransactionPool,
     TransactionValidationTaskExecutor
 };
 use tokio_stream::wrappers::BroadcastStream;
@@ -28,15 +32,15 @@ mod builder;
 pub use builder::*;
 
 type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
-type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
+type RethApi = EthApi<RethProvider, RethTxPool, NetworkHandle, EthEvmConfig>;
 type RethFilter = EthFilter<RethProvider, RethTxPool, RethApi>;
 type RethTrace = TraceApi<RethProvider, RethApi>;
-type RethDebug = DebugApi<RethProvider, RethApi, EthExecutorProvider>;
-type RethDbProvider = DatabaseProvider<Tx<RO>, ChainSpec>;
+type RethDebug = DebugApi<RethProvider, RethApi, BasicBlockExecutorProvider<EthExecutionStrategyFactory>>;
+type RethDbProvider = DatabaseProvider<Tx<RO>, NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
 type RethTxPool = Pool<
     TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
     CoinbaseTipOrdering<EthPooledTransaction>,
-    NoopBlobStore
+    DiskFileBlobStore
 >;
 
 /// direct libmdbx database connection to a reth node
@@ -46,7 +50,8 @@ pub struct RethLibmdbxClient {
     trace:       RethTrace,
     debug:       RethDebug,
     tx_pool:     RethTxPool,
-    db_provider: RethDbProvider
+    db_provider: RethDbProvider,
+    _private:    NodeExitFuture
 }
 
 impl RethLibmdbxClient {
@@ -87,29 +92,32 @@ impl EthStream for RethLibmdbxClient {
                     .blocks_iter()
                     .map(|sealed_block| Block {
                         header:       Header {
-                            hash:                     sealed_block.hash(),
-                            parent_hash:              sealed_block.parent_hash,
-                            uncles_hash:              sealed_block.ommers_hash,
-                            miner:                    sealed_block.beneficiary,
-                            state_root:               sealed_block.state_root,
-                            transactions_root:        sealed_block.transactions_root,
-                            receipts_root:            sealed_block.receipts_root,
-                            logs_bloom:               sealed_block.logs_bloom,
-                            difficulty:               sealed_block.difficulty,
-                            number:                   sealed_block.number,
-                            gas_limit:                sealed_block.gas_limit,
-                            gas_used:                 sealed_block.gas_used,
-                            timestamp:                sealed_block.timestamp,
-                            total_difficulty:         Some(sealed_block.difficulty),
-                            extra_data:               sealed_block.extra_data.clone(),
-                            mix_hash:                 Some(sealed_block.mix_hash),
-                            nonce:                    Some(sealed_block.nonce.into()),
-                            base_fee_per_gas:         sealed_block.base_fee_per_gas,
-                            withdrawals_root:         sealed_block.withdrawals_root,
-                            blob_gas_used:            sealed_block.blob_gas_used,
-                            excess_blob_gas:          sealed_block.excess_blob_gas,
-                            parent_beacon_block_root: sealed_block.parent_beacon_block_root,
-                            requests_root:            sealed_block.requests_root
+                            hash:             sealed_block.hash(),
+                            total_difficulty: Some(sealed_block.difficulty),
+                            inner:            alloy_consensus::Header {
+                                extra_data:               sealed_block.extra_data.clone(),
+                                mix_hash:                 sealed_block.mix_hash,
+                                nonce:                    sealed_block.nonce.into(),
+                                base_fee_per_gas:         sealed_block.base_fee_per_gas,
+                                withdrawals_root:         sealed_block.withdrawals_root,
+                                blob_gas_used:            sealed_block.blob_gas_used,
+                                excess_blob_gas:          sealed_block.excess_blob_gas,
+                                parent_beacon_block_root: sealed_block.parent_beacon_block_root,
+                                requests_hash:            sealed_block.requests_hash,
+                                parent_hash:              sealed_block.parent_hash,
+                                ommers_hash:              sealed_block.ommers_hash,
+                                beneficiary:              sealed_block.beneficiary,
+                                state_root:               sealed_block.state_root,
+                                transactions_root:        sealed_block.transactions_root,
+                                receipts_root:            sealed_block.receipts_root,
+                                logs_bloom:               sealed_block.logs_bloom,
+                                difficulty:               sealed_block.difficulty,
+                                number:                   sealed_block.number,
+                                gas_limit:                sealed_block.gas_limit,
+                                gas_used:                 sealed_block.gas_used,
+                                timestamp:                sealed_block.timestamp
+                            },
+                            size:             Some(U56::from(sealed_block.size()))
                         },
                         uncles:       sealed_block
                             .body
@@ -126,14 +134,16 @@ impl EthStream for RethLibmdbxClient {
                                 .into_iter()
                                 .filter_map(|tx| {
                                     tx.recover_signer().map(|signer| {
-                                        reth_rpc_types_compat::transaction::from_recovered::<()>(tx.with_signer(signer))
-                                            .inner
+                                        reth_rpc_types_compat::transaction::from_recovered(
+                                            tx.with_signer(signer),
+                                            &EthTxBuilder
+                                        )
                                     })
                                 })
                                 .collect()
                         ),
-                        size:         Some(U256::from(sealed_block.size())),
-                        withdrawals:  sealed_block
+
+                        withdrawals: sealed_block
                             .body
                             .withdrawals
                             .clone()
@@ -233,15 +243,15 @@ mod tests {
         let client = builder.build().unwrap();
 
         // let block_stream = client.block_stream().await.unwrap();
-        // assert!(stream_timeout(block_stream, 2, 30).await.is_ok());
+        // assert!(stream_timeout(block_stream, , 30).await.is_ok());
 
         let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
-        assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
+        assert!(stream_timeout(mempool_hash_stream, , 30).await.is_ok());
 
         let mempool_full_stream = client.full_pending_transaction_stream().await.unwrap();
-        assert!(stream_timeout(mempool_full_stream, 2, 30).await.is_ok());
+        assert!(stream_timeout(mempool_full_stream, , 30).await.is_ok());
 
         let log_stream = client.log_stream(Filter::new()).await.unwrap();
-        assert!(stream_timeout(log_stream, 2, 30).await.is_ok());
+        assert!(stream_timeout(log_stream, , 30).await.is_ok());
     }
 }

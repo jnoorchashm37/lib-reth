@@ -81,6 +81,8 @@ type RethTxPool = Pool<
     NoopBlobStore
 >;
 
+/*
+
 /// spawns the reth libmdbx client
 pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     db: Arc<DatabaseEnv>,
@@ -269,12 +271,13 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 //     Ok(())
 // }
 
-pub(super) async fn new_with_db2(
+*/
+pub(super) async fn new_with_db(
     db: Arc<DatabaseEnv>,
     max_tasks: usize,
     task_executor: TaskExecutor,
     static_files_path: PathBuf
-) -> eyre::Result<()> {
+) -> eyre::Result<RethLibmdbxClient> {
     let cli = reth::cli::Cli::<EthereumChainSpecParser, NoArgs>::parse();
     let mut eth_cmd = match cli.command {
         Commands::Node(cmd) => cmd,
@@ -345,33 +348,35 @@ pub(super) async fn new_with_db2(
         api.tx_resp_builder.clone()
     );
 
-    let client = RethLibmdbxClient2 { api, filter, trace, debug, tx_pool, db_provider, _private: builder.node_exit_future };
+    let client = RethLibmdbxClient { api, filter, trace, debug, tx_pool, db_provider, _private: builder.node_exit_future };
 
-    Ok(())
+    Ok(client)
 }
 
-type RethProvider2 = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
-type RethApi2 = EthApi<RethProvider, RethTxPool2, NetworkHandle, EthEvmConfig>;
-type RethFilter2 = EthFilter<RethProvider, RethTxPool2, RethApi2>;
-type RethTrace2 = TraceApi<RethProvider, RethApi2>;
-type RethDebug2 = DebugApi<RethProvider, RethApi2, BasicBlockExecutorProvider<EthExecutionStrategyFactory>>;
-type RethDbProvider2 = DatabaseProvider<Tx<RO>, NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
-type RethTxPool2 = Pool<
-    TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
-    CoinbaseTipOrdering<EthPooledTransaction>,
-    DiskFileBlobStore
->;
+// type RethProvider2 = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode,
+// Arc<DatabaseEnv>>>; type RethApi2 = EthApi<RethProvider, RethTxPool2,
+// NetworkHandle, EthEvmConfig>; type RethFilter2 = EthFilter<RethProvider,
+// RethTxPool2, RethApi2>; type RethTrace2 = TraceApi<RethProvider, RethApi2>;
+// type RethDebug2 = DebugApi<RethProvider, RethApi2,
+// BasicBlockExecutorProvider<EthExecutionStrategyFactory>>;
+// type RethDbProvider2 = DatabaseProvider<Tx<RO>,
+// NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>; type RethTxPool2 =
+// Pool<
+//     TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider,
+// EthPooledTransaction>>,     CoinbaseTipOrdering<EthPooledTransaction>,
+//     DiskFileBlobStore
+// >;
 
-/// direct libmdbx database connection to a reth node
-pub struct RethLibmdbxClient2 {
-    api:         RethApi2,
-    filter:      RethFilter2,
-    trace:       RethTrace2,
-    debug:       RethDebug2,
-    tx_pool:     RethTxPool2,
-    db_provider: RethDbProvider2,
-    _private:    NodeExitFuture
-}
+// /// direct libmdbx database connection to a reth node
+// pub struct RethLibmdbxClient2 {
+//     api:         RethApi2,
+//     filter:      RethFilter2,
+//     trace:       RethTrace2,
+//     debug:       RethDebug2,
+//     tx_pool:     RethTxPool2,
+//     db_provider: RethDbProvider2,
+//     _private:    NodeExitFuture
+// }
 
 // struct NoopNetworkBuidler;
 
