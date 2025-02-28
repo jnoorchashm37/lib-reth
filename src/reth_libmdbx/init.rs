@@ -52,7 +52,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let eth_state_config = EthStateCacheConfig::default();
 
-    let state_cache = EthStateCache::spawn_with(provider.clone(), eth_state_config.clone(), task_executor.clone());
+    let state_cache = EthStateCache::spawn_with(provider.clone(), eth_state_config, task_executor.clone());
 
     let transaction_validator = EthTransactionValidatorBuilder::new(provider.clone())
         .build_with_tasks(task_executor.clone(), NoopBlobStore::default());
@@ -71,7 +71,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let api = EthApi::with_spawner(&ctx);
 
-    let tracing_call_guard = BlockingTaskGuard::new(max_tasks as usize);
+    let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
     let trace = TraceApi::new(api.clone(), tracing_call_guard.clone());
 
     let provider_executor = EthExecutorProvider::ethereum(chain.clone());

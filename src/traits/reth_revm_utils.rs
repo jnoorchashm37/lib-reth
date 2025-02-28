@@ -22,7 +22,7 @@ impl DatabaseRef for RethLibmdbxDatabaseRef {
     type Error = RevmUtilError;
 
     fn basic_ref(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
-        Ok(reth_revm::DatabaseRef::basic_ref(&self.0, address)
+        reth_revm::DatabaseRef::basic_ref(&self.0, address)
             .map_err(RevmUtilError::as_value)?
             .map(|acct| {
                 Ok::<_, Self::Error>(AccountInfo {
@@ -32,7 +32,7 @@ impl DatabaseRef for RethLibmdbxDatabaseRef {
                     code: acct.code.map(change_bytecode).transpose()?,
                 })
             })
-            .transpose()?)
+            .transpose()
     }
 
     fn code_by_hash_ref(&self, code_hash: B256) -> Result<Bytecode, Self::Error> {
@@ -40,11 +40,11 @@ impl DatabaseRef for RethLibmdbxDatabaseRef {
     }
 
     fn storage_ref(&self, address: Address, index: U256) -> Result<U256, Self::Error> {
-        Ok(reth_revm::DatabaseRef::storage_ref(&self.0, address, index).map_err(RevmUtilError::as_value)?)
+        reth_revm::DatabaseRef::storage_ref(&self.0, address, index).map_err(RevmUtilError::as_value)
     }
 
     fn block_hash_ref(&self, number: u64) -> Result<B256, Self::Error> {
-        Ok(reth_revm::DatabaseRef::block_hash_ref(&self.0, number).map_err(RevmUtilError::as_value)?)
+        reth_revm::DatabaseRef::block_hash_ref(&self.0, number).map_err(RevmUtilError::as_value)
     }
 }
 
@@ -54,7 +54,7 @@ fn change_bytecode(bytes: reth_revm::primitives::Bytecode) -> eyre::Result<Bytec
         reth_revm::primitives::Bytecode::LegacyAnalyzed(legacy_analyzed_bytecode) => {
             Bytecode::LegacyAnalyzed(LegacyAnalyzedBytecode::new(
                 legacy_analyzed_bytecode.bytecode().clone(),
-                legacy_analyzed_bytecode.original_len().clone(),
+                legacy_analyzed_bytecode.original_len(),
                 JumpTable(legacy_analyzed_bytecode.jump_table().clone().0),
             ))
         }

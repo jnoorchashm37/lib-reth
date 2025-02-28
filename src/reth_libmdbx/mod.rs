@@ -84,7 +84,7 @@ impl EthStream for RethLibmdbxClient {
                             timestamp: sealed_block.timestamp,
                             extra_data: sealed_block.extra_data.clone(),
                             mix_hash: sealed_block.mix_hash,
-                            nonce: sealed_block.nonce.into(),
+                            nonce: sealed_block.nonce,
                             base_fee_per_gas: sealed_block.base_fee_per_gas,
                             withdrawals_root: sealed_block.withdrawals_root,
                             blob_gas_used: sealed_block.blob_gas_used,

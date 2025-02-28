@@ -14,8 +14,6 @@ use alloy_rpc_types::{Filter, Log};
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use futures::Stream;
 use futures::StreamExt;
-// #[cfg(feature = "revm")]
-// use revm::database_interface::WrapDatabaseAsync;
 #[cfg(feature = "revm")]
 use revm_database::{AlloyDB, WrapDatabaseAsync};
 
@@ -90,7 +88,7 @@ impl<P: Provider + Clone> EthStream for EthRpcClient<P> {
 
 impl<P: Provider + Clone> Provider for EthRpcClient<P> {
     fn root(&self) -> &RootProvider {
-        &self.provider.root()
+        self.provider.root()
     }
 }
 
