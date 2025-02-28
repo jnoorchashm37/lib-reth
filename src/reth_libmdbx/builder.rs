@@ -7,9 +7,9 @@ use crate::reth_libmdbx::RethLibmdbxClient;
 
 #[derive(Debug, Clone)]
 pub struct RethLibmdbxClientBuilder {
-    db_path:   String,
+    db_path: String,
     max_tasks: usize,
-    db_args:   Option<DatabaseArguments>
+    db_args: Option<DatabaseArguments>,
 }
 
 impl RethLibmdbxClientBuilder {
@@ -27,7 +27,7 @@ impl RethLibmdbxClientBuilder {
         let db = Arc::new(open_db_read_only(
             db_path,
             self.db_args
-                .unwrap_or(DatabaseArguments::new(Default::default()))
+                .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
         let mut static_files = db_path.to_path_buf();
         static_files.pop();
@@ -38,13 +38,13 @@ impl RethLibmdbxClientBuilder {
 
     pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
         self,
-        task_executor: T
+        task_executor: T,
     ) -> eyre::Result<RethLibmdbxClient> {
         let db_path = Path::new(&self.db_path);
         let db = Arc::new(open_db_read_only(
             db_path,
             self.db_args
-                .unwrap_or(DatabaseArguments::new(Default::default()))
+                .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
         let mut static_files = db_path.to_path_buf();
         static_files.pop();

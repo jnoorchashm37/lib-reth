@@ -44,7 +44,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     static_files_path: PathBuf,
 ) -> eyre::Result<RethLibmdbxClient> {
     let chain = MAINNET.clone();
-    let static_files = StaticFileProvider::read_write(static_files_path)?;
+    let static_files = StaticFileProvider::read_only(static_files_path, true)?;
     let provider_factory: ProviderFactory<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>> =
         ProviderFactory::new(Arc::clone(&db), Arc::clone(&chain), static_files);
 
