@@ -1,9 +1,18 @@
 use revm::{
-    database_interface::{async_db::DatabaseAsyncRef, WrapDatabaseAsync},
-    DatabaseRef, Evm
+    context::{BlockEnv, CfgEnv, Evm, TxEnv},
+    handler::{instructions::EthInstructions, EthPrecompiles},
+    interpreter::interpreter::EthInterpreter,
+    Context, DatabaseRef, MainBuilder, MainContext,
 };
-use revm_database::CacheDB;
-use revm_wiring::EthereumWiring;
+use revm_database::{async_db::DatabaseAsyncRef, CacheDB, WrapDatabaseAsync};
+// use revm_wiring::EthereumWiring;
+
+pub type RevmEvm<DB> = Evm<
+    Context<BlockEnv, TxEnv, CfgEnv, DB>,
+    (),
+    EthInstructions<EthInterpreter, Context<BlockEnv, TxEnv, CfgEnv, DB>>,
+    EthPrecompiles<Context<BlockEnv, TxEnv, CfgEnv, DB>>,
+>;
 
 /// revm utils
 pub trait EthRevm {
@@ -18,12 +27,12 @@ pub trait EthRevm {
     }
 
     /// `makes a new cache db`
-    fn make_empty_evm(&self, block_number: u64) -> eyre::Result<Evm<'_, EthereumWiring<CacheDB<Self::InnerDb>, ()>>> {
+    fn make_empty_evm(&self, block_number: u64) -> eyre::Result<RevmEvm<CacheDB<Self::InnerDb>>> {
         let cache = self.make_cache_db(block_number)?;
-        let evm = Evm::builder()
-            .with_external_context(())
+        let evm = Context::mainnet()
+            .with_block(BlockEnv { number: block_number, ..Default::default() })
             .with_db(cache)
-            .build();
+            .build_mainnet();
         Ok(evm)
     }
 }
@@ -36,14 +45,14 @@ pub trait AsyncEthRevm {
     fn make_inner_db(
         &self,
         block_number: u64,
-        handle: tokio::runtime::Handle
+        handle: tokio::runtime::Handle,
     ) -> eyre::Result<WrapDatabaseAsync<Self::InnerDb>>;
 
     /// `makes a new cache db`
     fn make_cache_db(
         &self,
         block_number: u64,
-        handle: tokio::runtime::Handle
+        handle: tokio::runtime::Handle,
     ) -> eyre::Result<CacheDB<WrapDatabaseAsync<Self::InnerDb>>> {
         Ok(CacheDB::new(self.make_inner_db(block_number, handle)?))
     }
@@ -52,13 +61,14 @@ pub trait AsyncEthRevm {
     fn make_evm(
         &self,
         block_number: u64,
-        handle: tokio::runtime::Handle
-    ) -> eyre::Result<Evm<'_, EthereumWiring<CacheDB<WrapDatabaseAsync<Self::InnerDb>>, ()>>> {
+        handle: tokio::runtime::Handle,
+    ) -> eyre::Result<RevmEvm<CacheDB<WrapDatabaseAsync<Self::InnerDb>>>> {
         let cache = self.make_cache_db(block_number, handle)?;
-        let evm = Evm::builder()
-            .with_external_context(())
+        let evm = Context::mainnet()
+            .with_block(BlockEnv { number: block_number, ..Default::default() })
             .with_db(cache)
-            .build();
+            .build_mainnet();
+
         Ok(evm)
     }
 }

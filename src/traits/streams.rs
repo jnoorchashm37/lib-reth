@@ -1,20 +1,23 @@
+use alloy_consensus::TxEnvelope;
 use alloy_primitives::TxHash;
-use alloy_rpc_types::{eth::Filter, Block, Log, Transaction};
+use alloy_rpc_types::{eth::Filter, Log};
 use futures::{Future, Stream};
 
 /// `eth_subscribe`
 pub trait EthStream {
     /// `newHeads`
-    fn block_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Block> + Send>> + Send;
+    fn block_stream(
+        &self,
+    ) -> impl Future<Output = eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send>> + Send;
 
     /// `newPendingTransactions` (true)
     fn full_pending_transaction_stream(
-        &self
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Transaction> + Send>> + Send;
+        &self,
+    ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxEnvelope> + Send>> + Send;
 
     /// `newPendingTransactions` (false)
     fn pending_transaction_hashes_stream(
-        &self
+        &self,
     ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>> + Send;
 
     /// `logs`

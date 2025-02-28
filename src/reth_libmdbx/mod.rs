@@ -1,52 +1,32 @@
 mod init;
 
-use std::sync::Arc;
-
+use alloy_consensus::TxEnvelope;
 use alloy_primitives::{TxHash, U256};
 use alloy_rpc_types::{
-    eth::{Block, Filter, Log, Transaction},
-    BlockTransactions, FilteredParams, Header
+    eth::{Filter, Log},
+    FilteredParams, Header,
 };
 use futures::{Stream, StreamExt};
-use reth_chainspec::ChainSpec;
-use reth_db::{mdbx::tx::Tx, DatabaseEnv};
-use reth_libmdbx::RO;
-use reth_network_api::noop::NoopNetwork;
-use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
-use reth_node_types::NodeTypesWithDBAdapter;
-use reth_provider::{providers::BlockchainProvider, CanonStateSubscriptions, DatabaseProvider};
-use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
+use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
+
+use reth_provider::CanonStateSubscriptions;
 use reth_rpc_eth_types::logs_utils;
-use reth_transaction_pool::{
-    blobstore::NoopBlobStore, CoinbaseTipOrdering, EthPooledTransaction, EthTransactionValidator, Pool, TransactionPool,
-    TransactionValidationTaskExecutor
-};
+use reth_transaction_pool::TransactionPool;
 use tokio_stream::wrappers::BroadcastStream;
 
-use crate::traits::EthStream;
 mod builder;
 pub use builder::*;
 
-type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
-type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
-type RethFilter = EthFilter<RethProvider, RethTxPool, RethApi>;
-type RethTrace = TraceApi<RethProvider, RethApi>;
-type RethDebug = DebugApi<RethProvider, RethApi, EthExecutorProvider>;
-type RethDbProvider = DatabaseProvider<Tx<RO>, ChainSpec>;
-type RethTxPool = Pool<
-    TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
-    CoinbaseTipOrdering<EthPooledTransaction>,
-    NoopBlobStore
->;
+use crate::traits::EthStream;
 
 /// direct libmdbx database connection to a reth node
 pub struct RethLibmdbxClient {
-    api:         RethApi,
-    filter:      RethFilter,
-    trace:       RethTrace,
-    debug:       RethDebug,
-    tx_pool:     RethTxPool,
-    db_provider: RethDbProvider
+    api: RethApi,
+    filter: RethFilter,
+    trace: RethTrace,
+    debug: RethDebug,
+    tx_pool: RethTxPool,
+    db_provider: RethDbProvider,
 }
 
 impl RethLibmdbxClient {
@@ -76,7 +56,7 @@ impl RethLibmdbxClient {
 }
 
 impl EthStream for RethLibmdbxClient {
-    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Block> + Send> {
+    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send> {
         let stream = self
             .api
             .provider()
@@ -85,59 +65,33 @@ impl EthStream for RethLibmdbxClient {
                 let sealed_blocks = new_chain
                     .committed()
                     .blocks_iter()
-                    .map(|sealed_block| Block {
-                        header:       Header {
-                            hash:                     sealed_block.hash(),
-                            parent_hash:              sealed_block.parent_hash,
-                            uncles_hash:              sealed_block.ommers_hash,
-                            miner:                    sealed_block.beneficiary,
-                            state_root:               sealed_block.state_root,
-                            transactions_root:        sealed_block.transactions_root,
-                            receipts_root:            sealed_block.receipts_root,
-                            logs_bloom:               sealed_block.logs_bloom,
-                            difficulty:               sealed_block.difficulty,
-                            number:                   sealed_block.number,
-                            gas_limit:                sealed_block.gas_limit,
-                            gas_used:                 sealed_block.gas_used,
-                            timestamp:                sealed_block.timestamp,
-                            total_difficulty:         Some(sealed_block.difficulty),
-                            extra_data:               sealed_block.extra_data.clone(),
-                            mix_hash:                 Some(sealed_block.mix_hash),
-                            nonce:                    Some(sealed_block.nonce.into()),
-                            base_fee_per_gas:         sealed_block.base_fee_per_gas,
-                            withdrawals_root:         sealed_block.withdrawals_root,
-                            blob_gas_used:            sealed_block.blob_gas_used,
-                            excess_blob_gas:          sealed_block.excess_blob_gas,
+                    .map(|sealed_block| Header {
+                        hash: sealed_block.hash(),
+                        total_difficulty: Some(sealed_block.difficulty),
+                        size: Some(U256::from(sealed_block.size())),
+                        inner: alloy_consensus::Header {
+                            parent_hash: sealed_block.parent_hash,
+                            ommers_hash: sealed_block.ommers_hash,
+                            beneficiary: sealed_block.beneficiary,
+                            state_root: sealed_block.state_root,
+                            transactions_root: sealed_block.transactions_root,
+                            receipts_root: sealed_block.receipts_root,
+                            logs_bloom: sealed_block.logs_bloom,
+                            difficulty: sealed_block.difficulty,
+                            number: sealed_block.number,
+                            gas_limit: sealed_block.gas_limit,
+                            gas_used: sealed_block.gas_used,
+                            timestamp: sealed_block.timestamp,
+                            extra_data: sealed_block.extra_data.clone(),
+                            mix_hash: sealed_block.mix_hash,
+                            nonce: sealed_block.nonce.into(),
+                            base_fee_per_gas: sealed_block.base_fee_per_gas,
+                            withdrawals_root: sealed_block.withdrawals_root,
+                            blob_gas_used: sealed_block.blob_gas_used,
+                            excess_blob_gas: sealed_block.excess_blob_gas,
                             parent_beacon_block_root: sealed_block.parent_beacon_block_root,
-                            requests_root:            sealed_block.requests_root
+                            requests_hash: sealed_block.requests_hash,
                         },
-                        uncles:       sealed_block
-                            .body
-                            .ommers
-                            .clone()
-                            .into_iter()
-                            .map(|uncle| uncle.ommers_hash)
-                            .collect(),
-                        transactions: BlockTransactions::Full(
-                            sealed_block
-                                .body
-                                .transactions
-                                .clone()
-                                .into_iter()
-                                .filter_map(|tx| {
-                                    tx.recover_signer().map(|signer| {
-                                        reth_rpc_types_compat::transaction::from_recovered::<()>(tx.with_signer(signer))
-                                            .inner
-                                    })
-                                })
-                                .collect()
-                        ),
-                        size:         Some(U256::from(sealed_block.size())),
-                        withdrawals:  sealed_block
-                            .body
-                            .withdrawals
-                            .clone()
-                            .map(|wit| wit.into_iter().collect())
                     })
                     .collect::<Vec<_>>();
                 futures::stream::iter(sealed_blocks)
@@ -146,15 +100,12 @@ impl EthStream for RethLibmdbxClient {
         Ok(stream)
     }
 
-    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Transaction> + Send> {
+    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = TxEnvelope> + Send> {
         let stream = self
             .api
             .pool()
             .new_pending_pool_transactions_listener()
-            .map(|tx| {
-                reth_rpc_types_compat::transaction::from_recovered::<()>(tx.transaction.transaction.transaction().clone())
-                    .inner
-            });
+            .map(|pooled_tx| TxEnvelope::from(pooled_tx.transaction.transaction.transaction.clone_tx()));
 
         Ok(stream)
     }
@@ -185,7 +136,7 @@ impl EthStream for RethLibmdbxClient {
                         .tx_receipts
                         .iter()
                         .map(|(tx, receipt)| (*tx, receipt)),
-                    removed
+                    removed,
                 );
                 futures::stream::iter(all_logs)
             });
