@@ -34,15 +34,17 @@ impl RethLibmdbxClientBuilder {
         }
 
         let db = Arc::new(open_db_read_only(
-            db_path,
+            db_path.join("db"),
             self.db_args
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
-        let mut static_files = db_path.to_path_buf();
-        static_files.pop();
-        static_files.push("static_files");
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files)
+        crate::reth_libmdbx::init::new_with_db(
+            db,
+            self.max_tasks,
+            TokioTaskExecutor::default(),
+            db_path.join("static_files"),
+        )
     }
 
     pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
@@ -50,15 +52,21 @@ impl RethLibmdbxClientBuilder {
         task_executor: T,
     ) -> eyre::Result<RethLibmdbxClient> {
         let db_path = Path::new(&self.db_path);
+
+        if !db_path.join("db").exists() {
+            eyre::bail!("no 'db' subdirectory found in directory '{db_path:?}'")
+        }
+
+        if !db_path.join("static_files").exists() {
+            eyre::bail!("no 'static_files' subdirectory found in directory '{db_path:?}'")
+        }
+
         let db = Arc::new(open_db_read_only(
             db_path,
             self.db_args
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
-        let mut static_files = db_path.to_path_buf();
-        static_files.pop();
-        static_files.push("static_files");
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, static_files)
+        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, db_path.join("static_files"))
     }
 }
