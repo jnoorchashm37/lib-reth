@@ -24,6 +24,15 @@ impl RethLibmdbxClientBuilder {
 
     pub fn build(self) -> eyre::Result<RethLibmdbxClient> {
         let db_path = Path::new(&self.db_path);
+
+        if !db_path.join("db").exists() {
+            eyre::bail!("no 'db' subdirectory found in directory '{db_path:?}'")
+        }
+
+        if !db_path.join("static_files").exists() {
+            eyre::bail!("no 'static_files' subdirectory found in directory '{db_path:?}'")
+        }
+
         let db = Arc::new(open_db_read_only(
             db_path,
             self.db_args
