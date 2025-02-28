@@ -1,4 +1,7 @@
-use std::{path::Path, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use reth_db::{mdbx::DatabaseArguments, open_db_read_only};
 use reth_tasks::{TaskSpawner, TokioTaskExecutor};
@@ -23,43 +26,7 @@ impl RethLibmdbxClientBuilder {
     }
 
     pub fn build(self) -> eyre::Result<RethLibmdbxClient> {
-        let db_path = Path::new(&self.db_path);
-
-        if !db_path.join("db").exists() {
-            eyre::bail!("no 'db' subdirectory found in directory '{db_path:?}'")
-        }
-
-        if !db_path.join("static_files").exists() {
-            eyre::bail!("no 'static_files' subdirectory found in directory '{db_path:?}'")
-        }
-
-        let db = Arc::new(open_db_read_only(
-            db_path.join("db"),
-            self.db_args
-                .unwrap_or(DatabaseArguments::new(Default::default())),
-        )?);
-
-        crate::reth_libmdbx::init::new_with_db(
-            db,
-            self.max_tasks,
-            TokioTaskExecutor::default(),
-            db_path.join("static_files"),
-        )
-    }
-
-    pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
-        self,
-        task_executor: T,
-    ) -> eyre::Result<RethLibmdbxClient> {
-        let db_path = Path::new(&self.db_path);
-
-        if !db_path.join("db").exists() {
-            eyre::bail!("no 'db' subdirectory found in directory '{db_path:?}'")
-        }
-
-        if !db_path.join("static_files").exists() {
-            eyre::bail!("no 'static_files' subdirectory found in directory '{db_path:?}'")
-        }
+        let (db_path, static_files) = self.db_paths()?;
 
         let db = Arc::new(open_db_read_only(
             db_path,
@@ -67,6 +34,36 @@ impl RethLibmdbxClientBuilder {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, db_path.join("static_files"))
+        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files)
+    }
+
+    pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
+        self,
+        task_executor: T,
+    ) -> eyre::Result<RethLibmdbxClient> {
+        let (db_path, static_files) = self.db_paths()?;
+
+        let db = Arc::new(open_db_read_only(
+            db_path,
+            self.db_args
+                .unwrap_or(DatabaseArguments::new(Default::default())),
+        )?);
+
+        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, static_files)
+    }
+
+    /// (db_path, static_files)
+    fn db_paths(&self) -> eyre::Result<(PathBuf, PathBuf)> {
+        let db_path = Path::new(&self.db_path);
+
+        if !db_path.join("db").exists() {
+            eyre::bail!("no 'db' subdirectory found in directory '{db_path:?}'")
+        }
+
+        if !db_path.join("static_files").exists() {
+            eyre::bail!("no 'static_files' subdirectory found in directory '{db_path:?}'")
+        }
+
+        Ok((db_path.join("db"), db_path.join("static_files")))
     }
 }
