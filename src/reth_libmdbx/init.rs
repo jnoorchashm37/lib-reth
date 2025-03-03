@@ -25,7 +25,7 @@ use reth_transaction_pool::{
 use super::RethLibmdbxClient;
 
 pub(super) type RethProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
-pub(super) type RethDbProvider = DatabaseProvider<Tx<RO>, NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
+pub(super) type RethDbProvider = BlockchainProvider<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>>;
 pub(super) type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
 pub(super) type RethFilter = EthFilter<RethApi>;
 pub(super) type RethTrace = TraceApi<RethApi>;
@@ -58,7 +58,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let tx_pool = Pool::eth_pool(transaction_validator.clone(), NoopBlobStore::default(), PoolConfig::default());
 
     let ctx = EthApiBuilderCtx {
-        provider,
+        provider: provider.clone(),
         pool: tx_pool.clone(),
         network: NoopNetwork::default(),
         evm_config: EthEvmConfig::new(chain.clone()),
@@ -76,5 +76,5 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let debug = DebugApi::new(api.clone(), tracing_call_guard, provider_executor);
     let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 
-    Ok(RethLibmdbxClient { api, trace, filter, debug, tx_pool, db_provider: provider_factory.provider()? })
+    Ok(RethLibmdbxClient { api, trace, filter, debug, tx_pool, db_provider: provider })
 }
