@@ -1,8 +1,8 @@
 use std::{path::PathBuf, sync::Arc};
 
 use reth_chainspec::MAINNET;
-use reth_db::{mdbx::tx::Tx, DatabaseEnv};
-use reth_libmdbx::RO;
+use reth_db::DatabaseEnv;
+
 use reth_network_api::noop::NoopNetwork;
 use reth_node_ethereum::{
     BasicBlockExecutorProvider, EthEvmConfig, EthExecutionStrategyFactory, EthExecutorProvider, EthereumNode,
@@ -11,7 +11,7 @@ use reth_node_types::NodeTypesWithDBAdapter;
 
 use reth_provider::{
     providers::{BlockchainProvider, StaticFileProvider},
-    DatabaseProvider, ProviderFactory,
+    ProviderFactory,
 };
 
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
@@ -77,4 +77,46 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 
     Ok(RethLibmdbxClient { api, trace, filter, debug, tx_pool, db_provider: provider })
+}
+
+#[cfg(test)]
+mod tests {
+    use alloy_network::Ethereum;
+    use alloy_provider::{IpcConnect, Provider, RootProvider};
+    use alloy_rpc_client::ClientBuilder;
+    use futures::StreamExt;
+    use reth_rpc_eth_api::EthApiServer;
+
+    use crate::reth_libmdbx::RethLibmdbxClientBuilder;
+
+    #[tokio::test]
+    async fn test_read_live_blocks() {
+        let reth_client = RethLibmdbxClientBuilder::new("/home/data/reth", 100)
+            .build()
+            .unwrap();
+
+        let ipc_builder = ClientBuilder::default()
+            .ipc(IpcConnect::new("/tmp/reth.ipc".to_string()))
+            .await
+            .unwrap();
+        let ipc_provider = RootProvider::<Ethereum>::new(ipc_builder);
+
+        let mut block_stream = ipc_provider
+            .subscribe_blocks()
+            .await
+            .unwrap()
+            .into_stream()
+            .take(5);
+
+        while let Some(block_header) = block_stream.next().await {
+            let full_block = reth_client
+                .eth_api()
+                .block_by_number(block_header.number.into(), true)
+                .await
+                .unwrap();
+            assert!(full_block.is_some())
+        }
+
+        let _ = ();
+    }
 }
