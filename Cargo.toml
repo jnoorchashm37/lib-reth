@@ -10,7 +10,6 @@ path = "src/lib.rs"
 
 [dependencies]
 # reth
-reth = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", default-features = false, optional = true }
 reth-provider = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
@@ -34,7 +33,6 @@ reth-node-types = { git = "https://github.com/paradigmxyz/reth", version = "1.2.
 reth-engine-local = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-payload-builder = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-node-builder = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
-reth-cli = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-prune = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-config = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
@@ -42,7 +40,6 @@ reth-chain-state = { git = "https://github.com/paradigmxyz/reth", version = "1.2
 reth-engine-util = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-tokio-util = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-static-file = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
-reth-cli-commands = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 reth-node-events = { git = "https://github.com/paradigmxyz/reth", version = "1.2.0", tag = "v1.2.0", optional = true }
 
 # alloy
@@ -78,11 +75,7 @@ revm = { git = "https://github.com/bluealloy/revm.git", version = "20.0.0-alpha.
     "optional_balance_check",
     "optional_block_gas_limit",
 ], default-features = false }
-# revm-database = { version = "1.0.0-alpha.1", default-features = false}
 revm-database = { git = "https://github.com/bluealloy/revm.git", version = "1.0.0-alpha.1", default-features = false }
-# revm-database
-# { git = "https://github.com/bluealloy/revm.git", package = "revm-database" }
-# revm-wiring = { git = "https://github.com/bluealloy/revm.git" , package = "revm-wiring" }
 
 # async
 tokio = { version = "1", features = ["full"] }
@@ -131,8 +124,8 @@ libmdbx = [
     "dep:reth-engine-local",
     "dep:reth-payload-builder",
     "dep:reth-node-builder",
-    "dep:reth-cli",
-    "dep:reth",
+    # "dep:reth-cli",
+    # "dep:reth",
     "dep:clap",
     "dep:reth-prune",
     "dep:reth-config",
@@ -141,6 +134,6 @@ libmdbx = [
     "dep:reth-engine-util",
     "dep:reth-tokio-util",
     "dep:reth-static-file",
-    "dep:reth-cli-commands",
+    # "dep:reth-cli-commands",
     "dep:reth-node-events",
 ]

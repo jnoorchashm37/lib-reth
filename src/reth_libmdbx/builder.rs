@@ -54,16 +54,19 @@ impl RethLibmdbxClientBuilder {
 
     /// (db_path, static_files)
     fn db_paths(&self) -> eyre::Result<(PathBuf, PathBuf)> {
-        let db_path = Path::new(&self.db_path);
+        let db_dir = Path::new(&self.db_path);
 
-        if !db_path.join("db").exists() {
-            eyre::bail!("no 'db' subdirectory found in directory '{db_path:?}'")
+        let db_path = db_dir.join("db");
+        let static_files_path = db_dir.join("static_files");
+
+        if !db_path.exists() {
+            eyre::bail!("no 'db' subdirectory found in directory '{db_dir:?}'")
         }
 
-        if !db_path.join("static_files").exists() {
-            eyre::bail!("no 'static_files' subdirectory found in directory '{db_path:?}'")
+        if !static_files_path.exists() {
+            eyre::bail!("no 'static_files' subdirectory found in directory '{db_dir:?}'")
         }
 
-        Ok((db_path.join("db"), db_path.join("static_files")))
+        Ok((db_path, static_files_path))
     }
 }
