@@ -10,7 +10,7 @@ use reth_node_ethereum::{
 use reth_node_types::NodeTypesWithDBAdapter;
 
 use reth_provider::{
-    providers::{BlockchainProvider, ReadOnlyConfig, StaticFileProvider},
+    providers::{BlockchainProvider, StaticFileProvider},
     DatabaseProvider, ProviderFactory,
 };
 
@@ -50,11 +50,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let provider = BlockchainProvider::new(provider_factory.clone()).unwrap();
 
-    // let p = provider_factory.provider()?;
-
-    let eth_state_config = EthStateCacheConfig::default();
-
-    let state_cache = EthStateCache::spawn_with(provider.clone(), eth_state_config, task_executor.clone());
+    let state_cache = EthStateCache::spawn_with(provider.clone(), EthStateCacheConfig::default(), task_executor.clone());
 
     let transaction_validator = EthTransactionValidatorBuilder::new(provider.clone())
         .build_with_tasks(task_executor.clone(), NoopBlobStore::default());
