@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use reth_db::{mdbx::DatabaseArguments, open_db_read_only};
+use reth_db::{init_db, mdbx::DatabaseArguments};
 use reth_tasks::{TaskSpawner, TokioTaskExecutor};
 
 use crate::reth_libmdbx::RethLibmdbxClient;
@@ -28,7 +28,7 @@ impl RethLibmdbxClientBuilder {
     pub fn build(self) -> eyre::Result<RethLibmdbxClient> {
         let (db_path, static_files) = self.db_paths()?;
 
-        let db = Arc::new(open_db_read_only(
+        let db = Arc::new(init_db(
             db_path,
             self.db_args
                 .unwrap_or(DatabaseArguments::new(Default::default())),
@@ -43,7 +43,7 @@ impl RethLibmdbxClientBuilder {
     ) -> eyre::Result<RethLibmdbxClient> {
         let (db_path, static_files) = self.db_paths()?;
 
-        let db = Arc::new(open_db_read_only(
+        let db = Arc::new(init_db(
             db_path,
             self.db_args
                 .unwrap_or(DatabaseArguments::new(Default::default())),
