@@ -10,7 +10,7 @@ use reth_node_ethereum::{
 use reth_node_types::NodeTypesWithDBAdapter;
 
 use reth_provider::{
-    providers::{BlockchainProvider, StaticFileProvider},
+    providers::{BlockchainProvider, ReadOnlyConfig, StaticFileProvider},
     DatabaseProvider, ProviderFactory,
 };
 
@@ -44,11 +44,13 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     static_files_path: PathBuf,
 ) -> eyre::Result<RethLibmdbxClient> {
     let chain = MAINNET.clone();
-    let static_files = StaticFileProvider::read_only(static_files_path, true)?;
+    let static_files = StaticFileProvider::read_only(static_files_path.clone(), true)?;
     let provider_factory: ProviderFactory<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>> =
-        ProviderFactory::new(Arc::clone(&db), Arc::clone(&chain), static_files);
+        ProviderFactory::new(db.clone(), chain.clone(), static_files);
 
     let provider = BlockchainProvider::new(provider_factory.clone()).unwrap();
+
+    // let p = provider_factory.provider()?;
 
     let eth_state_config = EthStateCacheConfig::default();
 
@@ -60,7 +62,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let tx_pool = Pool::eth_pool(transaction_validator.clone(), NoopBlobStore::default(), PoolConfig::default());
 
     let ctx = EthApiBuilderCtx {
-        provider: provider.clone(),
+        provider,
         pool: tx_pool.clone(),
         network: NoopNetwork::default(),
         evm_config: EthEvmConfig::new(chain.clone()),
