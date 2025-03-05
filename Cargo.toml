@@ -10,37 +10,37 @@ path = "src/lib.rs"
 
 [dependencies]
 # reth
-reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", default-features = false, optional = true }
-reth-provider = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-rpc = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-rpc-types-compat = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-tasks = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-network-api = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-db = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true, default-features = false, features = [
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", default-features = false, optional = true }
+reth-provider = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-rpc = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-rpc-types-compat = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-tasks = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-network-api = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-chainspec = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-db = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true, default-features = false, features = [
     "mdbx",
 ] }
-reth-db-api = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-storage-errors = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-revm = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-node-types = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-engine-local = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-payload-builder = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-node-builder = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-prune = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-config = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-chain-state = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-engine-util = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-tokio-util = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-static-file = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
-reth-node-events = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
+reth-db-api = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-storage-errors = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-libmdbx = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-revm = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-node-types = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-engine-local = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-payload-builder = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-node-builder = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-prune = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-config = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-chain-state = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-engine-util = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-tokio-util = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-static-file = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
+reth-node-events = { git = "https://github.com/paradigmxyz/reth", rev = "916b2415", optional = true }
 
 # alloy
 alloy-provider = { version = "0.11.1", default-features = false, features = [
