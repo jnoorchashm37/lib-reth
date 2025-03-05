@@ -44,9 +44,10 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     static_files_path: PathBuf,
 ) -> eyre::Result<RethLibmdbxClient> {
     let chain = MAINNET.clone();
-    let static_files = StaticFileProvider::read_only(static_files_path.clone(), true)?;
+    let static_file_provider = StaticFileProvider::read_only(static_files_path.clone(), true)?;
+
     let provider_factory: ProviderFactory<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>> =
-        ProviderFactory::new(db.clone(), chain.clone(), static_files);
+        ProviderFactory::new(db.clone(), chain.clone(), static_file_provider);
 
     let provider = BlockchainProvider::new(provider_factory.clone()).unwrap();
 
@@ -85,6 +86,7 @@ mod tests {
     use alloy_provider::{IpcConnect, Provider, RootProvider};
     use alloy_rpc_client::ClientBuilder;
     use futures::StreamExt;
+    use reth_provider::StaticFileProviderFactory;
     use reth_rpc_eth_api::EthApiServer;
 
     use crate::reth_libmdbx::RethLibmdbxClientBuilder;
@@ -109,7 +111,11 @@ mod tests {
             .take(5);
 
         while let Some(block_header) = block_stream.next().await {
-            std::thread::sleep(std::time::Duration::from_secs(300));
+            reth_client
+                .db_provider
+                .static_file_provider()
+                .initialize_index()
+                .unwrap();
             let full_block = reth_client
                 .eth_api()
                 .block_by_number(block_header.number.into(), true)
