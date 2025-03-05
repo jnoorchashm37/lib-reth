@@ -48,18 +48,19 @@ impl DatabaseRef for RethLibmdbxDatabaseRef {
     }
 }
 
-fn change_bytecode(bytes: reth_revm::primitives::Bytecode) -> eyre::Result<Bytecode> {
+fn change_bytecode(bytes: reth_revm::bytecode::Bytecode) -> eyre::Result<Bytecode> {
+    // Ok(bytes)
     let new_bytecode = match bytes {
-        reth_revm::primitives::Bytecode::LegacyRaw(bytes) => Bytecode::new_legacy(bytes),
-        reth_revm::primitives::Bytecode::LegacyAnalyzed(legacy_analyzed_bytecode) => {
+        // reth_revm::bytecode::Bytecode::LegacyRaw(bytes) => Bytecode::new_legacy(bytes),
+        reth_revm::bytecode::Bytecode::LegacyAnalyzed(legacy_analyzed_bytecode) => {
             Bytecode::LegacyAnalyzed(LegacyAnalyzedBytecode::new(
                 legacy_analyzed_bytecode.bytecode().clone(),
                 legacy_analyzed_bytecode.original_len(),
                 JumpTable(legacy_analyzed_bytecode.jump_table().clone().0),
             ))
         }
-        reth_revm::primitives::Bytecode::Eof(arc) => Bytecode::Eof(change_eof(arc)?),
-        reth_revm::primitives::Bytecode::Eip7702(eip7702_bytecode) => Bytecode::Eip7702(Eip7702Bytecode {
+        reth_revm::bytecode::Bytecode::Eof(arc) => Bytecode::Eof(change_eof(arc)?),
+        reth_revm::bytecode::Bytecode::Eip7702(eip7702_bytecode) => Bytecode::Eip7702(Eip7702Bytecode {
             delegated_address: eip7702_bytecode.delegated_address,
             version: eip7702_bytecode.version,
             raw: eip7702_bytecode.raw,
@@ -69,7 +70,7 @@ fn change_bytecode(bytes: reth_revm::primitives::Bytecode) -> eyre::Result<Bytec
     Ok(new_bytecode)
 }
 
-fn change_eof(eof: Arc<reth_revm::primitives::Eof>) -> eyre::Result<Arc<Eof>> {
+fn change_eof(eof: Arc<reth_revm::bytecode::Eof>) -> eyre::Result<Arc<Eof>> {
     Ok(Arc::new(Eof::decode(eof.encode_slow())?))
 }
 
@@ -112,9 +113,9 @@ mod tests {
 
     #[test]
     fn test_eof_conversion() {
-        let eof = reth_revm::primitives::Eof::decode(bytes!("ef000101000402000100010400000000800000fe")).unwrap();
+        let eof = reth_revm::bytecode::Eof::decode(bytes!("ef000101000402000100010400000000800000fe")).unwrap();
         let new_eof = change_eof(Arc::new(eof.clone())).unwrap();
-        let original_eof = reth_revm::primitives::Eof::decode(new_eof.encode_slow()).unwrap();
+        let original_eof = reth_revm::bytecode::Eof::decode(new_eof.encode_slow()).unwrap();
 
         assert_eq!(eof, original_eof);
     }

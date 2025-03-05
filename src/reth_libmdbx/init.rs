@@ -1,12 +1,11 @@
 use std::{path::PathBuf, sync::Arc};
 
+use rayon::{ThreadPool, ThreadPoolBuilder};
 use reth_chainspec::MAINNET;
 use reth_db::DatabaseEnv;
 
 use reth_network_api::noop::NoopNetwork;
-use reth_node_ethereum::{
-    BasicBlockExecutorProvider, EthEvmConfig, EthExecutionStrategyFactory, EthExecutorProvider, EthereumNode,
-};
+use reth_node_ethereum::{BasicBlockExecutorProvider, EthEvmConfig, EthExecutorProvider, EthereumNode};
 use reth_node_types::NodeTypesWithDBAdapter;
 
 use reth_provider::{
@@ -15,8 +14,14 @@ use reth_provider::{
 };
 
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
-use reth_rpc_eth_types::{EthApiBuilderCtx, EthConfig, EthFilterConfig, EthStateCache, EthStateCacheConfig};
-use reth_tasks::{pool::BlockingTaskGuard, TaskSpawner};
+use reth_rpc_eth_types::{
+    EthConfig, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap,
+    GasPriceOracle, GasPriceOracleConfig,
+};
+use reth_tasks::{
+    pool::{BlockingTaskGuard, BlockingTaskPool},
+    TaskSpawner,
+};
 use reth_transaction_pool::{
     blobstore::NoopBlobStore, validate::EthTransactionValidatorBuilder, CoinbaseTipOrdering, EthPooledTransaction,
     EthTransactionValidator, Pool, PoolConfig, TransactionValidationTaskExecutor,
@@ -29,7 +34,7 @@ pub(super) type RethDbProvider = BlockchainProvider<NodeTypesWithDBAdapter<Ether
 pub(super) type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
 pub(super) type RethFilter = EthFilter<RethApi>;
 pub(super) type RethTrace = TraceApi<RethApi>;
-pub(super) type RethDebug = DebugApi<RethApi, BasicBlockExecutorProvider<EthExecutionStrategyFactory>>;
+pub(super) type RethDebug = DebugApi<RethApi, BasicBlockExecutorProvider<EthEvmConfig>>;
 pub(super) type RethTxPool = Pool<
     TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
     CoinbaseTipOrdering<EthPooledTransaction>,
@@ -58,17 +63,32 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let tx_pool = Pool::eth_pool(transaction_validator.clone(), NoopBlobStore::default(), PoolConfig::default());
 
-    let ctx = EthApiBuilderCtx {
-        provider: provider.clone(),
-        pool: tx_pool.clone(),
-        network: NoopNetwork::default(),
-        evm_config: EthEvmConfig::new(chain.clone()),
-        config: EthConfig::default(),
-        executor: task_executor.clone(),
-        cache: state_cache.clone(),
-    };
+    // let ctx = EthApiBuilderCtx {
+    //     provider: provider.clone(),
+    //     pool: tx_pool.clone(),
+    //     network: NoopNetwork::default(),
+    //     evm_config: EthEvmConfig::new(chain.clone()),
+    //     config: EthConfig::default(),
+    //     executor: task_executor.clone(),
+    //     cache: state_cache.clone(),
+    // };
 
-    let api = EthApi::with_spawner(&ctx);
+    let api = EthApi::new(
+        provider.clone(),
+        tx_pool.clone(),
+        NoopNetwork::default(),
+        state_cache.clone(),
+        GasPriceOracle::new(provider.clone(), GasPriceOracleConfig::default(), state_cache.clone()),
+        GasCap::default(),
+        1000,
+        1000,
+        BlockingTaskPool::new(ThreadPoolBuilder::new().build()?),
+        FeeHistoryCache::new(FeeHistoryCacheConfig::default()),
+        EthEvmConfig::new(chain.clone()),
+        10,
+    );
+
+    // let api = EthApi::with_spawner(&ctx);
 
     let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
     let trace = TraceApi::new(api.clone(), tracing_call_guard.clone());
@@ -111,11 +131,11 @@ mod tests {
             .take(5);
 
         while let Some(block_header) = block_stream.next().await {
-            reth_client
-                .db_provider
-                .static_file_provider()
-                .initialize_index()
-                .unwrap();
+            // reth_client
+            //     .db_provider
+            //     .static_file_provider()
+            //     .initialize_index()
+            //     .unwrap();
             let full_block = reth_client
                 .eth_api()
                 .block_by_number(block_header.number.into(), true)
