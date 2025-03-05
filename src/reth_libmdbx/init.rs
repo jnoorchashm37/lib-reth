@@ -109,6 +109,7 @@ mod tests {
             .take(5);
 
         while let Some(block_header) = block_stream.next().await {
+            std::thread::sleep(std::time::Duration::from_secs(300));
             let full_block = reth_client
                 .eth_api()
                 .block_by_number(block_header.number.into(), true)
