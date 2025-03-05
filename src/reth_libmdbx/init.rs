@@ -117,7 +117,5 @@ mod tests {
                 .unwrap();
             assert!(full_block.is_some())
         }
-
-        let _ = ();
     }
 }
