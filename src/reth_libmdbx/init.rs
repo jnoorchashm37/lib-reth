@@ -93,7 +93,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_read_live_blocks() {
-        let reth_client = RethLibmdbxClientBuilder::new("/home/data/reth", 100)
+        let reth_client = RethLibmdbxClientBuilder::new("/home/data/reth", 100000)
             .build()
             .unwrap();
 
