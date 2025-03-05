@@ -11,7 +11,7 @@ path = "src/lib.rs"
 [dependencies]
 # reth
 reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.2.2", tag = "v1.2.2", default-features = false, optional = true }
-reth-provider = { git = "https://github.com/paradigmxyz/reth", version = "1.2.2", tag = "v1.2.2", optional = true }
+reth-provider = { git = "https://github.com/paradigmxyz/reth", rev = "63aaeda8", optional = true }
 reth-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.2.2", tag = "v1.2.2", optional = true }
 reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", version = "1.2.2", tag = "v1.2.2", optional = true }
 reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", version = "1.2.2", tag = "v1.2.2", optional = true }
@@ -54,6 +54,7 @@ alloy-rpc-client = { version = "0.11.1", default-features = false, features = [
     "ws",
     "pubsub",
 ] }
+alloy-evm = { version = "0.1", default-features = false }
 alloy-transport = { version = "0.11.1", default-features = false }
 alloy-json-rpc = { version = "0.11.1", default-features = false }
 alloy-transport-http = { version = "0.11.1", default-features = false }
@@ -86,6 +87,9 @@ futures = "0.3"
 eyre = "0.6.5"
 rayon = "1.7"
 clap = { version = "4.4.8", optional = true }
+
+[patch.crates-io]
+alloy-evm = { git = "https://github.com/alloy-rs/evm", rev = "04fa394" }
 
 
 [dev-dependencies]
