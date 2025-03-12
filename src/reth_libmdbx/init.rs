@@ -13,6 +13,8 @@ use reth_provider::{
     ProviderFactory,
 };
 
+use reth_rpc_server_types::constants::{DEFAULT_ETH_PROOF_WINDOW, DEFAULT_MAX_SIMULATE_BLOCKS, DEFAULT_PROOF_PERMITS};
+
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_types::{
     EthConfig, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap,
@@ -80,12 +82,12 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
         state_cache.clone(),
         GasPriceOracle::new(provider.clone(), GasPriceOracleConfig::default(), state_cache.clone()),
         GasCap::default(),
-        1000,
-        1000,
+        DEFAULT_MAX_SIMULATE_BLOCKS,
+        DEFAULT_ETH_PROOF_WINDOW,
         BlockingTaskPool::new(ThreadPoolBuilder::new().build()?),
         FeeHistoryCache::new(FeeHistoryCacheConfig::default()),
         EthEvmConfig::new(chain.clone()),
-        10,
+        DEFAULT_PROOF_PERMITS,
     );
 
     // let api = EthApi::with_spawner(&ctx);
