@@ -133,7 +133,7 @@ mod tests {
             .take(5);
 
         while let Some(block_header) = block_stream.next().await {
-            tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
             reth_client
                 .db_provider
                 .static_file_provider()
