@@ -70,7 +70,7 @@ impl<P: Provider + Clone> EthStream for EthRpcClient<P> {
             .subscribe_full_pending_transactions()
             .await?
             .into_stream()
-            .map(|val| val.inner))
+            .map(|val| val.inner.clone_inner()))
     }
 
     async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {

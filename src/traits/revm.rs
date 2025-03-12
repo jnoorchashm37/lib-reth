@@ -11,7 +11,7 @@ pub type RevmEvm<DB> = Evm<
     Context<BlockEnv, TxEnv, CfgEnv, DB>,
     (),
     EthInstructions<EthInterpreter, Context<BlockEnv, TxEnv, CfgEnv, DB>>,
-    EthPrecompiles<Context<BlockEnv, TxEnv, CfgEnv, DB>>,
+    EthPrecompiles,
 >;
 
 /// revm utils

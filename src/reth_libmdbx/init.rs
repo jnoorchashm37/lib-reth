@@ -1,6 +1,6 @@
 use std::{path::PathBuf, sync::Arc};
 
-use rayon::{ThreadPool, ThreadPoolBuilder};
+use rayon::ThreadPoolBuilder;
 use reth_chainspec::MAINNET;
 use reth_db::DatabaseEnv;
 
@@ -17,8 +17,8 @@ use reth_rpc_server_types::constants::{DEFAULT_ETH_PROOF_WINDOW, DEFAULT_MAX_SIM
 
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_types::{
-    EthConfig, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap,
-    GasPriceOracle, GasPriceOracleConfig,
+    EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap, GasPriceOracle,
+    GasPriceOracleConfig,
 };
 use reth_tasks::{
     pool::{BlockingTaskGuard, BlockingTaskPool},
@@ -65,16 +65,6 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let tx_pool = Pool::eth_pool(transaction_validator.clone(), NoopBlobStore::default(), PoolConfig::default());
 
-    // let ctx = EthApiBuilderCtx {
-    //     provider: provider.clone(),
-    //     pool: tx_pool.clone(),
-    //     network: NoopNetwork::default(),
-    //     evm_config: EthEvmConfig::new(chain.clone()),
-    //     config: EthConfig::default(),
-    //     executor: task_executor.clone(),
-    //     cache: state_cache.clone(),
-    // };
-
     let api = EthApi::new(
         provider.clone(),
         tx_pool.clone(),
@@ -89,8 +79,6 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
         EthEvmConfig::new(chain.clone()),
         DEFAULT_PROOF_PERMITS,
     );
-
-    // let api = EthApi::with_spawner(&ctx);
 
     let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
     let trace = TraceApi::new(api.clone(), tracing_call_guard.clone());

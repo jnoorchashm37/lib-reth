@@ -105,7 +105,7 @@ impl EthStream for RethLibmdbxClient {
             .api
             .pool()
             .new_pending_pool_transactions_listener()
-            .map(|pooled_tx| TxEnvelope::from(pooled_tx.transaction.transaction.transaction.clone_tx()));
+            .map(|pooled_tx| TxEnvelope::from(pooled_tx.transaction.transaction.transaction.clone_inner()));
 
         Ok(stream)
     }
