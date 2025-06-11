@@ -2,7 +2,6 @@ mod init;
 
 use alloy_consensus::TxEnvelope;
 use alloy_primitives::{TxHash, U256};
-use alloy_provider::Provider;
 use alloy_rpc_types::{
     eth::{Filter, Log},
     Header,
@@ -11,6 +10,7 @@ use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
 
 use reth_provider::CanonStateSubscriptions;
+
 use reth_rpc_eth_types::logs_utils;
 use reth_transaction_pool::TransactionPool;
 use tokio_stream::wrappers::BroadcastStream;
@@ -21,17 +21,16 @@ pub use builder::*;
 use crate::traits::EthStream;
 
 /// direct libmdbx database connection to a reth node
-pub struct RethLibmdbxClient<P: Provider> {
+pub struct RethLibmdbxClient {
     api: RethApi,
     filter: RethFilter,
     trace: RethTrace,
     debug: RethDebug,
     tx_pool: RethTxPool,
     db_provider: RethDbProvider,
-    root_provider: P,
 }
 
-impl<P: Provider> RethLibmdbxClient<P> {
+impl RethLibmdbxClient {
     pub fn eth_api(&self) -> RethApi {
         self.api.clone()
     }
@@ -55,13 +54,9 @@ impl<P: Provider> RethLibmdbxClient<P> {
     pub fn eth_db_provider(&self) -> &RethDbProvider {
         &self.db_provider
     }
-
-    pub fn root_provider(&self) -> &P {
-        &self.root_provider
-    }
 }
 
-impl<P: Provider> EthStream for RethLibmdbxClient<P> {
+impl EthStream for RethLibmdbxClient {
     async fn block_stream(&self) -> eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send> {
         let stream = self
             .api
@@ -152,7 +147,7 @@ impl<P: Provider> EthStream for RethLibmdbxClient<P> {
 }
 
 #[cfg(feature = "revm")]
-impl<P: Provider> crate::traits::EthRevm for RethLibmdbxClient<P> {
+impl crate::traits::EthRevm for RethLibmdbxClient {
     type InnerDb = crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef;
 
     fn make_inner_db(&self, block_number: u64) -> eyre::Result<Self::InnerDb> {
@@ -179,14 +174,14 @@ mod tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn can_build() {
-        let builder = RethLibmdbxClientBuilder::new_no_root_provider("/home/data/reth/db", 1000);
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         assert!(builder.build().is_ok())
     }
 
     #[tokio::test(flavor = "multi_thread")]
     #[serial_test::serial]
     async fn can_stream() {
-        let builder = RethLibmdbxClientBuilder::new_no_root_provider("/home/data/reth/db", 1000);
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
         let client = builder.build().unwrap();
 
         // let block_stream = client.block_stream().await.unwrap();

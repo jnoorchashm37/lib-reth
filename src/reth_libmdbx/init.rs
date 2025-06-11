@@ -1,6 +1,5 @@
 use std::{path::PathBuf, sync::Arc};
 
-use alloy_provider::Provider;
 use rayon::ThreadPoolBuilder;
 use reth_chainspec::MAINNET;
 use reth_db::DatabaseEnv;
@@ -45,34 +44,33 @@ pub(super) type RethTxPool = Pool<
 >;
 
 /// spawns the reth libmdbx client
-pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static, P: Provider>(
+pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     db: Arc<DatabaseEnv>,
     max_tasks: usize,
     task_executor: T,
     static_files_path: PathBuf,
-    root_provider: P,
-) -> eyre::Result<RethLibmdbxClient<P>> {
+) -> eyre::Result<RethLibmdbxClient> {
     let chain = MAINNET.clone();
     let static_file_provider = StaticFileProvider::read_only(static_files_path.clone(), true)?;
 
     let provider_factory: ProviderFactory<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>> =
         ProviderFactory::new(db.clone(), chain.clone(), static_file_provider);
 
-    let db_provider = BlockchainProvider::new(provider_factory.clone()).unwrap();
+    let provider = BlockchainProvider::new(provider_factory.clone()).unwrap();
 
-    let state_cache = EthStateCache::spawn_with(db_provider.clone(), EthStateCacheConfig::default(), task_executor.clone());
+    let state_cache = EthStateCache::spawn_with(provider.clone(), EthStateCacheConfig::default(), task_executor.clone());
 
-    let transaction_validator = EthTransactionValidatorBuilder::new(db_provider.clone())
+    let transaction_validator = EthTransactionValidatorBuilder::new(provider.clone())
         .build_with_tasks(task_executor.clone(), NoopBlobStore::default());
 
     let tx_pool = Pool::eth_pool(transaction_validator.clone(), NoopBlobStore::default(), PoolConfig::default());
 
     let api = EthApi::new(
-        db_provider.clone(),
+        provider.clone(),
         tx_pool.clone(),
         NoopNetwork::default(),
         state_cache.clone(),
-        GasPriceOracle::new(db_provider.clone(), GasPriceOracleConfig::default(), state_cache.clone()),
+        GasPriceOracle::new(provider.clone(), GasPriceOracleConfig::default(), state_cache.clone()),
         GasCap::default(),
         DEFAULT_MAX_SIMULATE_BLOCKS,
         DEFAULT_ETH_PROOF_WINDOW,
@@ -89,7 +87,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static, P: Provider>(
     let debug = DebugApi::new(api.clone(), tracing_call_guard, provider_executor);
     let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 
-    Ok(RethLibmdbxClient { api, trace, filter, debug, tx_pool, db_provider, root_provider })
+    Ok(RethLibmdbxClient { api, trace, filter, debug, tx_pool, db_provider: provider })
 }
 
 #[cfg(test)]
@@ -105,7 +103,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_read_live_blocks() {
-        let reth_client = RethLibmdbxClientBuilder::new_no_root_provider("/home/data/reth", 100000)
+        let reth_client = RethLibmdbxClientBuilder::new("/home/data/reth", 100000)
             .build()
             .unwrap();
 
