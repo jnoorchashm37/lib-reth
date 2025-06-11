@@ -4,7 +4,7 @@ use alloy_consensus::TxEnvelope;
 use alloy_primitives::{TxHash, U256};
 use alloy_rpc_types::{
     eth::{Filter, Log},
-    FilteredParams, Header,
+    Header,
 };
 use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
@@ -130,7 +130,7 @@ impl EthStream for RethLibmdbxClient {
             .flat_map(futures::stream::iter)
             .flat_map(move |(block_receipts, removed)| {
                 let all_logs = logs_utils::matching_block_logs_with_tx_hashes(
-                    &FilteredParams { filter: Some(filter.clone()) },
+                    &filter,
                     block_receipts.block,
                     block_receipts
                         .tx_receipts

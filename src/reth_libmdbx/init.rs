@@ -5,7 +5,7 @@ use reth_chainspec::MAINNET;
 use reth_db::DatabaseEnv;
 
 use reth_network_api::noop::NoopNetwork;
-use reth_node_ethereum::{BasicBlockExecutorProvider, EthEvmConfig, EthExecutorProvider, EthereumNode};
+use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
 use reth_node_types::NodeTypesWithDBAdapter;
 
 use reth_provider::{
@@ -17,8 +17,8 @@ use reth_rpc_server_types::constants::{DEFAULT_ETH_PROOF_WINDOW, DEFAULT_MAX_SIM
 
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_types::{
-    EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap, GasPriceOracle,
-    GasPriceOracleConfig,
+    EthConfig, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap,
+    GasPriceOracle, GasPriceOracleConfig,
 };
 use reth_tasks::{
     pool::{BlockingTaskGuard, BlockingTaskPool},
@@ -36,7 +36,7 @@ pub(super) type RethDbProvider = BlockchainProvider<NodeTypesWithDBAdapter<Ether
 pub(super) type RethApi = EthApi<RethProvider, RethTxPool, NoopNetwork, EthEvmConfig>;
 pub(super) type RethFilter = EthFilter<RethApi>;
 pub(super) type RethTrace = TraceApi<RethApi>;
-pub(super) type RethDebug = DebugApi<RethApi, BasicBlockExecutorProvider<EthEvmConfig>>;
+pub(super) type RethDebug = DebugApi<RethApi, EthEvmConfig>;
 pub(super) type RethTxPool = Pool<
     TransactionValidationTaskExecutor<EthTransactionValidator<RethProvider, EthPooledTransaction>>,
     CoinbaseTipOrdering<EthPooledTransaction>,
@@ -81,7 +81,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     );
 
     let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
-    let trace = TraceApi::new(api.clone(), tracing_call_guard.clone());
+    let trace = TraceApi::new(api.clone(), tracing_call_guard.clone(), EthConfig::default());
 
     let provider_executor = EthExecutorProvider::ethereum(chain.clone());
     let debug = DebugApi::new(api.clone(), tracing_call_guard, provider_executor);

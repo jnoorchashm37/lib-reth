@@ -5,7 +5,6 @@ use revm::{
     Context, DatabaseRef, MainBuilder, MainContext,
 };
 use revm_database::{async_db::DatabaseAsyncRef, CacheDB, WrapDatabaseAsync};
-// use revm_wiring::EthereumWiring;
 
 pub type RevmEvm<DB> = Evm<
     Context<BlockEnv, TxEnv, CfgEnv, DB>,
