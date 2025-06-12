@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use reth_chainspec::Chain;
+use reth_chainspec::ChainSpec;
 use reth_db::{mdbx::DatabaseArguments, open_db_read_only};
 use reth_tasks::{TaskSpawner, TokioTaskExecutor};
 
@@ -14,11 +14,11 @@ pub struct RethLibmdbxClientBuilder {
     db_path: String,
     max_tasks: usize,
     db_args: Option<DatabaseArguments>,
-    chain: Chain,
+    chain: Arc<ChainSpec>,
 }
 
 impl RethLibmdbxClientBuilder {
-    pub fn new(db_path: &str, max_tasks: usize, chain: Chain) -> Self {
+    pub fn new(db_path: &str, max_tasks: usize, chain: Arc<ChainSpec>) -> Self {
         Self { db_path: db_path.to_string(), max_tasks, db_args: None, chain }
     }
 

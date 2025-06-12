@@ -160,7 +160,7 @@ impl crate::traits::EthRevm for RethLibmdbxClient {
 #[cfg(test)]
 mod tests {
 
-    use reth_chainspec::Chain;
+    use reth_chainspec::MAINNET;
 
     use super::*;
 
@@ -176,14 +176,14 @@ mod tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn can_build() {
-        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, Chain::mainnet());
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, MAINNET.clone());
         assert!(builder.build().is_ok())
     }
 
     #[tokio::test(flavor = "multi_thread")]
     #[serial_test::serial]
     async fn can_stream() {
-        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, Chain::mainnet());
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, MAINNET.clone());
         let client = builder.build().unwrap();
 
         // let block_stream = client.block_stream().await.unwrap();
