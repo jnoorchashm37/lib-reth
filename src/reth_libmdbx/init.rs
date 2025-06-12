@@ -1,7 +1,7 @@
 use std::{path::PathBuf, sync::Arc};
 
 use rayon::ThreadPoolBuilder;
-use reth_chainspec::MAINNET;
+use reth_chainspec::{Chain, ChainSpec};
 use reth_db::DatabaseEnv;
 
 use reth_network_api::noop::NoopNetwork;
@@ -49,8 +49,10 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     max_tasks: usize,
     task_executor: T,
     static_files_path: PathBuf,
+    chain: Chain,
 ) -> eyre::Result<RethLibmdbxClient> {
-    let chain = MAINNET.clone();
+    let chain = Arc::new(ChainSpec::builder().chain(chain).build());
+
     let static_file_provider = StaticFileProvider::read_only(static_files_path.clone(), true)?;
 
     let provider_factory: ProviderFactory<NodeTypesWithDBAdapter<EthereumNode, Arc<DatabaseEnv>>> =
@@ -96,6 +98,7 @@ mod tests {
     use alloy_provider::{IpcConnect, Provider, RootProvider};
     use alloy_rpc_client::ClientBuilder;
     use futures::StreamExt;
+    use reth_chainspec::Chain;
     use reth_provider::StaticFileProviderFactory;
     use reth_rpc_eth_api::EthApiServer;
 
@@ -103,7 +106,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_read_live_blocks() {
-        let reth_client = RethLibmdbxClientBuilder::new("/home/data/reth", 100000)
+        let reth_client = RethLibmdbxClientBuilder::new("/home/data/reth", 100000, Chain::mainnet())
             .build()
             .unwrap();
 

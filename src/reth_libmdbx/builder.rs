@@ -3,6 +3,7 @@ use std::{
     sync::Arc,
 };
 
+use reth_chainspec::Chain;
 use reth_db::{mdbx::DatabaseArguments, open_db_read_only};
 use reth_tasks::{TaskSpawner, TokioTaskExecutor};
 
@@ -13,11 +14,12 @@ pub struct RethLibmdbxClientBuilder {
     db_path: String,
     max_tasks: usize,
     db_args: Option<DatabaseArguments>,
+    chain: Chain,
 }
 
 impl RethLibmdbxClientBuilder {
-    pub fn new(db_path: &str, max_tasks: usize) -> Self {
-        Self { db_path: db_path.to_string(), max_tasks, db_args: None }
+    pub fn new(db_path: &str, max_tasks: usize, chain: Chain) -> Self {
+        Self { db_path: db_path.to_string(), max_tasks, db_args: None, chain }
     }
 
     pub fn with_db_args(mut self, db_args: DatabaseArguments) -> Self {
@@ -34,7 +36,7 @@ impl RethLibmdbxClientBuilder {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files)
+        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files, self.chain)
     }
 
     pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
@@ -49,7 +51,7 @@ impl RethLibmdbxClientBuilder {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, static_files)
+        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, static_files, self.chain)
     }
 
     /// (db_path, static_files)

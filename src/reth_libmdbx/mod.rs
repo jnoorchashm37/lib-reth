@@ -160,6 +160,8 @@ impl crate::traits::EthRevm for RethLibmdbxClient {
 #[cfg(test)]
 mod tests {
 
+    use reth_chainspec::Chain;
+
     use super::*;
 
     async fn stream_timeout<O>(stream: impl Stream<Item = O> + Unpin, values: usize, timeout: u64) -> eyre::Result<()> {
@@ -174,14 +176,14 @@ mod tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn can_build() {
-        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, Chain::mainnet());
         assert!(builder.build().is_ok())
     }
 
     #[tokio::test(flavor = "multi_thread")]
     #[serial_test::serial]
     async fn can_stream() {
-        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000);
+        let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, Chain::mainnet());
         let client = builder.build().unwrap();
 
         // let block_stream = client.block_stream().await.unwrap();
