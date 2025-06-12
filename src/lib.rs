@@ -6,3 +6,5 @@ pub mod traits;
 
 #[cfg(feature = "libmdbx")]
 pub use reth_rpc_eth_api::*;
+#[cfg(feature = "libmdbx")]
+pub use revm::*;
