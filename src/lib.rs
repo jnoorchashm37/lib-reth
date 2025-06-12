@@ -5,7 +5,7 @@ pub mod rpc;
 pub mod traits;
 
 #[cfg(feature = "libmdbx")]
-pub use reth_chainspec::ChainSpec;
+pub use reth_chainspec::*;
 #[cfg(feature = "libmdbx")]
 pub use reth_rpc_eth_api::*;
 #[cfg(feature = "libmdbx")]
