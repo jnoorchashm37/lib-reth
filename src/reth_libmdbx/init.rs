@@ -5,7 +5,7 @@ use reth_chainspec::ChainSpec;
 use reth_db::DatabaseEnv;
 
 use reth_network_api::noop::NoopNetwork;
-use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
+use reth_node_ethereum::{EthEvmConfig, EthereumNode};
 use reth_node_types::NodeTypesWithDBAdapter;
 
 use reth_provider::{
@@ -83,7 +83,7 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
     let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
     let trace = TraceApi::new(api.clone(), tracing_call_guard.clone(), EthConfig::default());
 
-    let provider_executor = EthExecutorProvider::ethereum(chain.clone());
+    let provider_executor = EthEvmConfig::ethereum(chain.clone());
     let debug = DebugApi::new(api.clone(), tracing_call_guard, provider_executor);
     let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 

@@ -133,6 +133,7 @@ impl EthStream for RethLibmdbxClient {
                 let all_logs = logs_utils::matching_block_logs_with_tx_hashes(
                     &filter,
                     block_receipts.block,
+                    block_receipts.timestamp,
                     block_receipts
                         .tx_receipts
                         .iter()

@@ -1,6 +1,7 @@
+use alloy_primitives::U256;
 use revm::{
     context::{BlockEnv, CfgEnv, Evm, TxEnv},
-    handler::{instructions::EthInstructions, EthPrecompiles},
+    handler::{instructions::EthInstructions, EthFrame, EthPrecompiles},
     interpreter::interpreter::EthInterpreter,
     Context, DatabaseRef, MainBuilder, MainContext,
 };
@@ -11,6 +12,7 @@ pub type RevmEvm<DB> = Evm<
     (),
     EthInstructions<EthInterpreter, Context<BlockEnv, TxEnv, CfgEnv, DB>>,
     EthPrecompiles,
+    EthFrame,
 >;
 
 /// revm utils
@@ -29,7 +31,7 @@ pub trait EthRevm {
     fn make_empty_evm(&self, block_number: u64) -> eyre::Result<RevmEvm<CacheDB<Self::InnerDb>>> {
         let cache = self.make_cache_db(block_number)?;
         let evm = Context::mainnet()
-            .with_block(BlockEnv { number: block_number, ..Default::default() })
+            .with_block(BlockEnv { number: U256::from(block_number), ..Default::default() })
             .with_db(cache)
             .build_mainnet();
         Ok(evm)
@@ -64,7 +66,7 @@ pub trait AsyncEthRevm {
     ) -> eyre::Result<RevmEvm<CacheDB<WrapDatabaseAsync<Self::InnerDb>>>> {
         let cache = self.make_cache_db(block_number, handle)?;
         let evm = Context::mainnet()
-            .with_block(BlockEnv { number: block_number, ..Default::default() })
+            .with_block(BlockEnv { number: U256::from(block_number), ..Default::default() })
             .with_db(cache)
             .build_mainnet();
 
