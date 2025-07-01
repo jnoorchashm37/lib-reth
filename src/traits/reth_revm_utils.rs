@@ -14,6 +14,10 @@ impl RethLibmdbxDatabaseRef {
     pub fn new(this: StateProviderDatabase<Box<dyn StateProvider>>) -> Self {
         Self(this)
     }
+
+    pub fn state_provider_ref(&self) -> &StateProviderDatabase<Box<dyn StateProvider>> {
+        &self.0
+    }
 }
 
 impl DatabaseRef for RethLibmdbxDatabaseRef {
