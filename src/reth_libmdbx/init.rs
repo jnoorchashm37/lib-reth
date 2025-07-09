@@ -15,15 +15,13 @@ use reth_provider::{
 
 use reth_rpc_server_types::constants::{DEFAULT_ETH_PROOF_WINDOW, DEFAULT_MAX_SIMULATE_BLOCKS, DEFAULT_PROOF_PERMITS};
 
+use exe_runners::TaskSpawner;
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_types::{
     EthConfig, EthFilterConfig, EthStateCache, EthStateCacheConfig, FeeHistoryCache, FeeHistoryCacheConfig, GasCap,
     GasPriceOracle, GasPriceOracleConfig,
 };
-use reth_tasks::{
-    pool::{BlockingTaskGuard, BlockingTaskPool},
-    TaskSpawner,
-};
+use reth_tasks::pool::{BlockingTaskGuard, BlockingTaskPool};
 use reth_transaction_pool::{
     blobstore::NoopBlobStore, validate::EthTransactionValidatorBuilder, CoinbaseTipOrdering, EthPooledTransaction,
     EthTransactionValidator, Pool, PoolConfig, TransactionValidationTaskExecutor,

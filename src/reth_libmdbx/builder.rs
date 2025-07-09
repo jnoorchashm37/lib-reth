@@ -3,9 +3,9 @@ use std::{
     sync::Arc,
 };
 
+use exe_runners::{TaskSpawner, TokioTaskExecutor};
 use reth_chainspec::ChainSpec;
 use reth_db::{mdbx::DatabaseArguments, open_db_read_only};
-use reth_tasks::{TaskSpawner, TokioTaskExecutor};
 
 use crate::reth_libmdbx::RethLibmdbxClient;
 
