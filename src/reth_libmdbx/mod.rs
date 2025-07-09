@@ -9,7 +9,7 @@ use alloy_rpc_types::{
 use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
 
-use reth_provider::{CanonStateSubscriptions, StaticFileProviderFactory};
+use reth_provider::CanonStateSubscriptions;
 
 use reth_rpc_eth_types::logs_utils;
 use reth_transaction_pool::TransactionPool;
