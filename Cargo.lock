@@ -2568,7 +2568,7 @@ dependencies = [
 [[package]]
 name = "exe-runners"
 version = "0.1.0"
-source = "git+https://github.com/jnoorchashm37/exe-runners#e759ef3718bcd94029fa886d68ea2d2d92d0ab7a"
+source = "git+https://github.com/jnoorchashm37/exe-runners#5ca294a15467bf368304303b61c0aedc43a7317b"
 dependencies = [
  "auto_impl",
  "dyn-clone",

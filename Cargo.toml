@@ -79,6 +79,8 @@ full = ["ipc", "ws", "reth-libmdbx-revm"]
 ipc = []
 ws = []
 
+rayon = ["exe-runners/rayon"]
+
 
 reth-libmdbx-revm = ["revm", "libmdbx", "dep:reth-rpc-eth-api", "dep:reth-revm"]
 
