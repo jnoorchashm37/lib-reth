@@ -88,7 +88,7 @@ mod tests {
             .unwrap();
 
         let ipc_builder = ClientBuilder::default()
-            .ipc(IpcConnect::new("/tmp/reth.ipc".to_string()))
+            .ipc(IpcConnect::new("/tmp/mainnet/reth.ipc".to_string()))
             .await
             .unwrap();
         let ipc_provider = RootProvider::<Ethereum>::new(ipc_builder);

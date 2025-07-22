@@ -188,8 +188,8 @@ mod tests {
         let builder = RethLibmdbxClientBuilder::new("/home/data/reth/db", 1000, MAINNET.clone());
         let client = builder.build().unwrap();
 
-        // let block_stream = client.block_stream().await.unwrap();
-        // assert!(stream_timeout(block_stream, 2, 30).await.is_ok());
+        let block_stream = client.block_stream().await.unwrap();
+        assert!(stream_timeout(block_stream, 2, 30).await.is_ok());
 
         let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
         assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
