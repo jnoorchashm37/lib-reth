@@ -10,7 +10,7 @@ use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
 
 use reth_provider::CanonStateSubscriptions;
-pub use reth_provider::StaticFileProviderFactory;
+pub use reth_provider::{BlockNumReader, StaticFileProviderFactory};
 
 use reth_rpc_eth_types::logs_utils;
 use reth_transaction_pool::TransactionPool;
