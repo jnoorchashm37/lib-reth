@@ -174,13 +174,21 @@ mod tests {
         timeout: u64,
     ) -> eyre::Result<()> {
         let mut sub_stream = stream.take(values);
-        let f = async {
+        let f = async move {
+            let mut vals = values;
             while let Some(v) = sub_stream.next().await {
-                println!("{v:?}")
+                println!("{v:?}");
+                vals -= 1;
+                if vals == 0 {
+                    break;
+                }
             }
         };
 
-        tokio::time::timeout(std::time::Duration::from_secs(timeout), f).await?;
+        tokio::select! {
+            _ = f => (),
+            _ = tokio::time::sleep(std::time::Duration::from_secs(timeout)) => eyre::bail!("timed out")
+        };
 
         Ok(())
     }
