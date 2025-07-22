@@ -19,6 +19,8 @@ use tokio_stream::wrappers::BroadcastStream;
 mod builder;
 pub use builder::*;
 
+#[cfg(feature = "revm")]
+use crate::traits::BlockNumberOrHash;
 use crate::traits::EthStream;
 
 /// direct libmdbx database connection to a reth node
@@ -151,9 +153,17 @@ impl EthStream for RethLibmdbxClient {
 impl crate::traits::EthRevm for RethLibmdbxClient {
     type InnerDb = crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef;
 
-    fn make_inner_db(&self, block_number: u64) -> eyre::Result<Self::InnerDb> {
-        let state = reth_rpc_eth_api::helpers::state::LoadState::state_at_block_id(&self.eth_api(), block_number.into())?;
-        let this = reth_revm::database::StateProviderDatabase::new(state);
+    fn make_inner_db<T: Into<BlockNumberOrHash>>(&self, block: T) -> eyre::Result<Self::InnerDb> {
+        use reth_provider::StateProviderFactory;
+
+        let block: BlockNumberOrHash = block.into();
+
+        let state_provider = match block {
+            BlockNumberOrHash::Number(num) => self.db_provider.state_by_block_number_or_tag(num.into())?,
+            BlockNumberOrHash::Hash(hash) => self.db_provider.state_by_block_hash(hash)?,
+        };
+
+        let this = reth_revm::database::StateProviderDatabase::new(state_provider);
         Ok(crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef::new(this))
     }
 }

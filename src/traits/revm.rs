@@ -1,4 +1,4 @@
-use alloy_primitives::U256;
+use alloy_primitives::B256;
 use revm::{
     context::{BlockEnv, CfgEnv, Evm, TxEnv},
     handler::{instructions::EthInstructions, EthFrame, EthPrecompiles},
@@ -15,25 +15,39 @@ pub type RevmEvm<DB> = Evm<
     EthFrame,
 >;
 
+pub enum BlockNumberOrHash {
+    Number(u64),
+    Hash(B256),
+}
+
+impl From<u64> for BlockNumberOrHash {
+    fn from(value: u64) -> Self {
+        Self::Number(value)
+    }
+}
+
+impl From<B256> for BlockNumberOrHash {
+    fn from(value: B256) -> Self {
+        Self::Hash(value)
+    }
+}
+
 /// revm utils
 pub trait EthRevm {
     type InnerDb: DatabaseRef;
 
     /// `makes the inner database fetcher`
-    fn make_inner_db(&self, block_number: u64) -> eyre::Result<Self::InnerDb>;
+    fn make_inner_db<T: Into<BlockNumberOrHash>>(&self, block: T) -> eyre::Result<Self::InnerDb>;
 
     /// `makes a new cache db`
-    fn make_cache_db(&self, block_number: u64) -> eyre::Result<CacheDB<Self::InnerDb>> {
-        Ok(CacheDB::new(self.make_inner_db(block_number)?))
+    fn make_cache_db<T: Into<BlockNumberOrHash>>(&self, block: T) -> eyre::Result<CacheDB<Self::InnerDb>> {
+        Ok(CacheDB::new(self.make_inner_db(block)?))
     }
 
     /// `makes a new cache db`
-    fn make_empty_evm(&self, block_number: u64) -> eyre::Result<RevmEvm<CacheDB<Self::InnerDb>>> {
-        let cache = self.make_cache_db(block_number)?;
-        let evm = Context::mainnet()
-            .with_block(BlockEnv { number: U256::from(block_number), ..Default::default() })
-            .with_db(cache)
-            .build_mainnet();
+    fn make_empty_evm<T: Into<BlockNumberOrHash>>(&self, block: T) -> eyre::Result<RevmEvm<CacheDB<Self::InnerDb>>> {
+        let cache = self.make_cache_db(block)?;
+        let evm = Context::mainnet().with_db(cache).build_mainnet();
         Ok(evm)
     }
 }
@@ -65,10 +79,7 @@ pub trait AsyncEthRevm {
         handle: tokio::runtime::Handle,
     ) -> eyre::Result<RevmEvm<CacheDB<WrapDatabaseAsync<Self::InnerDb>>>> {
         let cache = self.make_cache_db(block_number, handle)?;
-        let evm = Context::mainnet()
-            .with_block(BlockEnv { number: U256::from(block_number), ..Default::default() })
-            .with_db(cache)
-            .build_mainnet();
+        let evm = Context::mainnet().with_db(cache).build_mainnet();
 
         Ok(evm)
     }
