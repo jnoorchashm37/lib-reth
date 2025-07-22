@@ -6,10 +6,11 @@ use alloy_rpc_types::{
     eth::{Filter, Log},
     Header,
 };
+
 use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
+pub use reth_provider::*;
 
-use reth_provider::CanonStateSubscriptions;
 pub use reth_provider::{BlockNumReader, StaticFileProviderFactory};
 
 use reth_rpc_eth_types::logs_utils;
