@@ -15,6 +15,7 @@ pub type RevmEvm<DB> = Evm<
     EthFrame,
 >;
 
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BlockNumberOrHash {
     Number(u64),
     Hash(B256),
