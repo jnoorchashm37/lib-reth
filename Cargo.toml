@@ -12,14 +12,11 @@ path = "src/lib.rs"
 # reth
 reth-provider = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
-reth-rpc-server-types = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
-reth-ethereum-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-tasks = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-network-api = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
-reth-eth-wire-types = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true }
 reth-db = { git = "https://github.com/paradigmxyz/reth", version = "1.6.0", tag = "v1.6.0", optional = true, default-features = false, features = [
     "mdbx",
@@ -40,7 +37,6 @@ alloy-rpc-client = { version = "1.0.23", default-features = false, features = [
     "ws",
     "pubsub",
 ] }
-alloy-eips = { version = "1.0.23", default-features = false }
 alloy-network = { version = "1.0.23", default-features = false }
 alloy-rpc-types = { version = "1.0.23", default-features = false, features = [
     "eth",
@@ -65,7 +61,6 @@ futures = "0.3"
 
 # misc
 eyre = "0.6.5"
-rayon = "1.7"
 exe-runners = { git = "https://github.com/jnoorchashm37/exe-runners", features = [
     "reth-tasks",
 ] }
@@ -91,7 +86,6 @@ revm = ["revm-database/alloydb"]
 libmdbx = [
     "dep:reth-provider",
     "dep:reth-rpc",
-    "dep:reth-rpc-server-types",
     "dep:reth-transaction-pool",
     "dep:reth-tasks",
     "dep:reth-network-api",
@@ -100,6 +94,4 @@ libmdbx = [
     "dep:reth-rpc-eth-types",
     "dep:reth-db",
     "dep:reth-node-types",
-    "dep:reth-ethereum-primitives",
-    "dep:reth-eth-wire-types",
 ]

@@ -60,8 +60,7 @@ impl RethLibmdbxClient {
 impl EthStream for RethLibmdbxClient {
     async fn block_stream(&self) -> eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send> {
         let stream = self
-            .api
-            .provider()
+            .db_provider
             .canonical_state_stream()
             .flat_map(|new_chain| {
                 let sealed_blocks = new_chain
