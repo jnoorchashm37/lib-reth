@@ -162,13 +162,23 @@ impl crate::traits::EthRevm for RethLibmdbxClient {
 #[cfg(test)]
 mod tests {
 
+    use std::fmt::Debug;
+
     use reth_chainspec::MAINNET;
 
     use super::*;
 
-    async fn stream_timeout<O>(stream: impl Stream<Item = O> + Unpin, values: usize, timeout: u64) -> eyre::Result<()> {
+    async fn stream_timeout<O: Debug>(
+        stream: impl Stream<Item = O> + Unpin,
+        values: usize,
+        timeout: u64,
+    ) -> eyre::Result<()> {
         let mut sub_stream = stream.take(values);
-        let f = async { while let Some(_) = sub_stream.next().await {} };
+        let f = async {
+            while let Some(v) = sub_stream.next().await {
+                println!("{v:?}")
+            }
+        };
 
         tokio::time::timeout(std::time::Duration::from_secs(timeout), f).await?;
 
