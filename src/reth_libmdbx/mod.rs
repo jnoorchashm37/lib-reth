@@ -206,7 +206,11 @@ mod tests {
         let builder = RethLibmdbxClientBuilder::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
         let client = builder.build().unwrap();
 
-        let block_stream = client.block_stream().await.unwrap();
+        let mut block_stream = client.block_stream().await.unwrap();
+
+        while let Some(v) = block_stream.next().await {
+            println!("{v:?}");
+        }
         assert!(stream_timeout(block_stream, 2, 30).await.is_ok());
     }
 
