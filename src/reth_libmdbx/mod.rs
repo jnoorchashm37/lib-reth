@@ -184,20 +184,41 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     #[serial_test::serial]
-    async fn can_stream() {
+    async fn test_block_stream() {
         let builder = RethLibmdbxClientBuilder::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
         let client = builder.build().unwrap();
 
         let block_stream = client.block_stream().await.unwrap();
         assert!(stream_timeout(block_stream, 2, 30).await.is_ok());
+    }
 
-        let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
-        assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
-
-        let mempool_full_stream = client.full_pending_transaction_stream().await.unwrap();
-        assert!(stream_timeout(mempool_full_stream, 2, 30).await.is_ok());
+    #[tokio::test(flavor = "multi_thread")]
+    #[serial_test::serial]
+    async fn test_log_stream() {
+        let builder = RethLibmdbxClientBuilder::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
+        let client = builder.build().unwrap();
 
         let log_stream = client.log_stream(Filter::new()).await.unwrap();
         assert!(stream_timeout(log_stream, 2, 30).await.is_ok());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[serial_test::serial]
+    async fn test_full_pending_transaction_stream() {
+        let builder = RethLibmdbxClientBuilder::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
+        let client = builder.build().unwrap();
+
+        let mempool_full_stream = client.full_pending_transaction_stream().await.unwrap();
+        assert!(stream_timeout(mempool_full_stream, 2, 30).await.is_ok());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    #[serial_test::serial]
+    async fn test_pending_transaction_hashes_stream() {
+        let builder = RethLibmdbxClientBuilder::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
+        let client = builder.build().unwrap();
+
+        let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
+        assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
     }
 }
