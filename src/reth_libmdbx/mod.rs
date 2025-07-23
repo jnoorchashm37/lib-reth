@@ -6,14 +6,18 @@ use alloy_rpc_types::{
     eth::{Filter, Log},
     Header,
 };
-
+use exe_runners::TaskSpawner;
 use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
+use reth_network_api::noop::NoopNetwork;
+use reth_node_ethereum::EthEvmConfig;
 pub use reth_provider::*;
 
 pub use reth_provider::{BlockNumReader, StaticFileProviderFactory};
 
-use reth_rpc_eth_types::logs_utils;
+use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
+use reth_rpc_eth_types::{logs_utils, EthConfig, EthFilterConfig};
+use reth_tasks::pool::BlockingTaskGuard;
 use reth_transaction_pool::TransactionPool;
 use tokio_stream::wrappers::BroadcastStream;
 
@@ -26,29 +30,32 @@ use crate::traits::EthStream;
 
 /// direct libmdbx database connection to a reth node
 pub struct RethLibmdbxClient {
-    api: RethApi,
-    filter: RethFilter,
-    trace: RethTrace,
-    debug: RethDebug,
+    // api: RethApi,
+    tracing_call_guard: BlockingTaskGuard,
+    task_spawner: Box<dyn TaskSpawner + 'static>,
+    // filter: RethFilter,
+    // trace: RethTrace,
+    // debug: RethDebug,
     tx_pool: RethTxPool,
     db_provider: RethDbProvider,
 }
 
 impl RethLibmdbxClient {
     pub fn eth_api(&self) -> RethApi {
-        self.api.clone()
+        EthApi::builder(self.db_provider.clone(), self.tx_pool.clone(), NoopNetwork::default(), EthEvmConfig::mainnet())
+            .build()
     }
 
     pub fn eth_filter(&self) -> RethFilter {
-        self.filter.clone()
+        EthFilter::new(self.eth_api(), EthFilterConfig::default(), self.task_spawner.clone())
     }
 
     pub fn eth_trace(&self) -> RethTrace {
-        self.trace.clone()
+        TraceApi::new(self.eth_api(), self.tracing_call_guard.clone(), EthConfig::default())
     }
 
     pub fn eth_debug(&self) -> RethDebug {
-        self.debug.clone()
+        DebugApi::new(self.eth_api(), self.tracing_call_guard.clone())
     }
 
     pub fn eth_tx_pool(&self) -> RethTxPool {
@@ -106,7 +113,7 @@ impl EthStream for RethLibmdbxClient {
 
     async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = TxEnvelope> + Send> {
         let stream = self
-            .api
+            .eth_api()
             .pool()
             .new_pending_pool_transactions_listener()
             .map(|pooled_tx| TxEnvelope::from(pooled_tx.transaction.transaction.transaction.clone_inner()));
@@ -116,7 +123,7 @@ impl EthStream for RethLibmdbxClient {
 
     async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
         let stream = self
-            .api
+            .eth_api()
             .pool()
             .new_pending_pool_transactions_listener()
             .map(|tx| *tx.transaction.hash());
@@ -125,7 +132,7 @@ impl EthStream for RethLibmdbxClient {
     }
 
     async fn log_stream(&self, filter: Filter) -> eyre::Result<impl Stream<Item = Log> + Send> {
-        let stream = BroadcastStream::new(self.api.provider().subscribe_to_canonical_state())
+        let stream = BroadcastStream::new(self.eth_api().provider().subscribe_to_canonical_state())
             .map(move |canon_state| {
                 canon_state
                     .expect("new block subscription never ends")
