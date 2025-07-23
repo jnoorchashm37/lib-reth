@@ -57,22 +57,16 @@ pub(super) fn new_with_db<T: TaskSpawner + Clone + 'static>(
 
     let tx_pool = Pool::eth_pool(transaction_validator, NoopBlobStore::default(), PoolConfig::default());
 
-    // let api = EthApi::builder(blockchain_provider.clone(), tx_pool.clone(), NoopNetwork::default(), EthEvmConfig::mainnet())
-    //     .build();
+    let api = EthApi::builder(blockchain_provider.clone(), tx_pool.clone(), NoopNetwork::default(), EthEvmConfig::mainnet())
+        .build();
 
     let tracing_call_guard = BlockingTaskGuard::new(max_tasks);
-    // let trace = TraceApi::new(api.clone(), tracing_call_guard.clone(), EthConfig::default());
+    let trace = TraceApi::new(api.clone(), tracing_call_guard.clone(), EthConfig::default());
 
-    // let debug = DebugApi::new(api.clone(), tracing_call_guard);
-    // let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), );
+    let debug = DebugApi::new(api.clone(), tracing_call_guard);
+    let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 
-    Ok(RethLibmdbxClient {
-        // api, trace, filter, debug,
-        tx_pool,
-        db_provider: blockchain_provider,
-        tracing_call_guard,
-        task_spawner: Box::new(task_executor.clone()),
-    })
+    Ok(RethLibmdbxClient { api, trace, filter, debug, tx_pool, db_provider: blockchain_provider })
 }
 
 #[cfg(test)]
