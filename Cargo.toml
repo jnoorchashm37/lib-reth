@@ -51,6 +51,7 @@ revm = { version = "27.0.3", features = [
     "secp256k1",
     "optional_balance_check",
     "optional_block_gas_limit",
+    "c-kzg",
 ], default-features = false }
 revm-database = { version = "7.0.1", default-features = false }
 
