@@ -100,3 +100,19 @@ impl From<eyre::ErrReport> for RevmUtilError {
         Self(value)
     }
 }
+
+#[cfg(feature = "uniswap-storage")]
+mod _uniswap_storage {
+    use alloy_primitives::{Address, StorageKey, StorageValue};
+    use reth_provider::StateProvider;
+    use uniswap_storage::StorageSlotFetcher;
+
+    use crate::traits::reth_revm_utils::RethLibmdbxDatabaseRef;
+
+    #[async_trait::async_trait]
+    impl StorageSlotFetcher for RethLibmdbxDatabaseRef {
+        async fn storage_at(&self, address: Address, key: StorageKey, _: Option<u64>) -> eyre::Result<StorageValue> {
+            Ok(self.0.storage(address, key)?.unwrap_or_default())
+        }
+    }
+}

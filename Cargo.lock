@@ -3923,6 +3923,7 @@ dependencies = [
  "alloy-rpc-client",
  "alloy-rpc-types",
  "alloy-rpc-types-eth",
+ "async-trait",
  "exe-runners",
  "eyre",
  "futures",
@@ -3943,6 +3944,7 @@ dependencies = [
  "serial_test",
  "tokio",
  "tokio-stream",
+ "uniswap-storage",
 ]
 
 [[package]]
@@ -9600,6 +9602,28 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "uniswap-storage"
+version = "0.1.0"
+source = "git+https://github.com/jnoorchashm37/uniswap-storage#6ac34cfcf6cb32bcff8d3a95b0ee9ced9bd0b02e"
+dependencies = [
+ "alloy-eips",
+ "alloy-network",
+ "alloy-primitives",
+ "alloy-provider",
+ "alloy-sol-types",
+ "async-trait",
+ "auto_impl",
+ "eyre",
+ "futures",
+ "itertools 0.14.0",
+ "reth-provider",
+ "reth-rpc",
+ "reth-rpc-convert",
+ "revm-database",
+ "serde",
+]
 
 [[package]]
 name = "universal-hash"
