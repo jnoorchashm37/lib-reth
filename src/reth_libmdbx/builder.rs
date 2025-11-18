@@ -4,21 +4,21 @@ use std::{
 };
 
 use exe_runners::{TaskSpawner, TokioTaskExecutor};
-use reth_chainspec::ChainSpec;
+
 use reth_db::{mdbx::DatabaseArguments, open_db_read_only};
 
-use crate::reth_libmdbx::RethLibmdbxClient;
+use crate::reth_libmdbx::node_types::{NodeClientSpec, RethNodeClient};
 
 #[derive(Debug, Clone)]
-pub struct RethLibmdbxClientBuilder {
+pub struct RethNodeClientBuilder<N: NodeClientSpec> {
     db_path: String,
     max_tasks: usize,
     db_args: Option<DatabaseArguments>,
-    chain: Arc<ChainSpec>,
+    chain: Arc<N::NodeChainSpec>,
 }
 
-impl RethLibmdbxClientBuilder {
-    pub fn new(db_path: &str, max_tasks: usize, chain: Arc<ChainSpec>) -> Self {
+impl<N: NodeClientSpec> RethNodeClientBuilder<N> {
+    pub fn new(db_path: &str, max_tasks: usize, chain: Arc<N::NodeChainSpec>) -> Self {
         Self { db_path: db_path.to_string(), max_tasks, db_args: None, chain }
     }
 
@@ -27,7 +27,7 @@ impl RethLibmdbxClientBuilder {
         self
     }
 
-    pub fn build(self) -> eyre::Result<RethLibmdbxClient> {
+    pub fn build(self) -> eyre::Result<RethNodeClient<N>> {
         let (db_path, static_files) = self.db_paths()?;
 
         let db = Arc::new(open_db_read_only(
@@ -36,13 +36,13 @@ impl RethLibmdbxClientBuilder {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files, self.chain)
+        N::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files, self.chain)
     }
 
     pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
         self,
         task_executor: T,
-    ) -> eyre::Result<RethLibmdbxClient> {
+    ) -> eyre::Result<RethNodeClient<N>> {
         let (db_path, static_files) = self.db_paths()?;
 
         let db = Arc::new(open_db_read_only(
@@ -51,7 +51,7 @@ impl RethLibmdbxClientBuilder {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        crate::reth_libmdbx::init::new_with_db(db, self.max_tasks, task_executor, static_files, self.chain)
+        N::new_with_db(db, self.max_tasks, task_executor, static_files, self.chain)
     }
 
     /// (db_path, static_files)

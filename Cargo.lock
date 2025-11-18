@@ -4061,9 +4061,11 @@ dependencies = [
  "exe-runners",
  "eyre",
  "futures",
+ "op-alloy-consensus",
  "op-alloy-network",
  "reth-chainspec",
  "reth-db",
+ "reth-ethereum",
  "reth-network-api",
  "reth-node-ethereum",
  "reth-node-types",
@@ -4072,6 +4074,7 @@ dependencies = [
  "reth-optimism-node",
  "reth-optimism-primitives",
  "reth-optimism-rpc",
+ "reth-primitives-traits",
  "reth-provider",
  "reth-revm",
  "reth-rpc",
@@ -5927,6 +5930,7 @@ dependencies = [
  "reth-codecs",
  "reth-db-models",
  "reth-ethereum-primitives",
+ "reth-optimism-primitives",
  "reth-primitives-traits",
  "reth-prune-types",
  "reth-stages-types",
@@ -6375,6 +6379,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "reth-ethereum"
+version = "1.9.3"
+source = "git+https://github.com/paradigmxyz/reth?tag=v1.9.3#27a8c0f5a6dfb27dea84c5751776ecabdd069646"
+dependencies = [
+ "alloy-rpc-types-engine",
+ "alloy-rpc-types-eth",
+ "reth-chainspec",
+ "reth-consensus",
+ "reth-consensus-common",
+ "reth-ethereum-consensus",
+ "reth-ethereum-primitives",
+ "reth-evm",
+ "reth-evm-ethereum",
+ "reth-node-api",
+ "reth-node-core",
+ "reth-primitives-traits",
+ "reth-revm",
+ "reth-storage-api",
+]
+
+[[package]]
 name = "reth-ethereum-consensus"
 version = "1.9.3"
 source = "git+https://github.com/paradigmxyz/reth?tag=v1.9.3#27a8c0f5a6dfb27dea84c5751776ecabdd069646"
@@ -6512,6 +6537,7 @@ dependencies = [
  "alloy-evm",
  "alloy-primitives",
  "alloy-rpc-types-engine",
+ "derive_more",
  "reth-chainspec",
  "reth-ethereum-forks",
  "reth-ethereum-primitives",

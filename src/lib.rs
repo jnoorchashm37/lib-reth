@@ -18,3 +18,6 @@ pub use revm::*;
 pub mod op_reth {
     pub use reth_optimism_chainspec::*;
 }
+
+#[cfg(test)]
+pub mod test_utils;

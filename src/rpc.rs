@@ -1,4 +1,5 @@
-use alloy_consensus::TxEnvelope;
+use std::marker::PhantomData;
+
 use alloy_network::Network;
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use alloy_primitives::TxHash;
@@ -13,20 +14,22 @@ use alloy_rpc_client::WsConnect;
 use alloy_rpc_types::{Filter, Log};
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use futures::Stream;
-use futures::StreamExt;
+
 #[cfg(feature = "revm")]
 use revm_database::{AlloyDB, WrapDatabaseAsync};
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use crate::traits::EthStream;
 
-pub struct EthRpcClient<P> {
+pub struct EthRpcClient<P, N> {
     provider: P,
+    _phantom: PhantomData<N>,
 }
 
-impl<P> EthRpcClient<P>
+impl<P, N> EthRpcClient<P, N>
 where
-    P: Provider + Clone,
+    P: Provider<N> + Clone,
+    N: Network,
 {
     pub fn provider(&self) -> &P {
         &self.provider
@@ -34,12 +37,12 @@ where
 }
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
-impl<N: Network> EthRpcClient<RootProvider<N>> {
+impl<N: Network> EthRpcClient<RootProvider<N>, N> {
     #[cfg(feature = "ws")]
     pub async fn new_ws(ws_url: &str) -> eyre::Result<Self> {
         let builder = ClientBuilder::default().ws(WsConnect::new(ws_url)).await?;
         let provider = RootProvider::new(builder);
-        Ok(Self { provider })
+        Ok(Self { provider, _phantom: PhantomData::default() })
     }
 
     #[cfg(feature = "ipc")]
@@ -48,29 +51,34 @@ impl<N: Network> EthRpcClient<RootProvider<N>> {
             .ipc(IpcConnect::new(ipc_path.to_string()))
             .await?;
         let provider = RootProvider::new(builder);
-        Ok(Self { provider })
+        Ok(Self { provider, _phantom: PhantomData::default() })
     }
 
     pub fn new_http(http_url: &str) -> eyre::Result<Self> {
         let builder = ClientBuilder::default().http(http_url.parse()?);
         let provider = RootProvider::new(builder);
-        Ok(Self { provider })
+        Ok(Self { provider, _phantom: PhantomData::default() })
     }
 }
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
-impl<P: Provider + Clone> EthStream for EthRpcClient<P> {
+impl<P, N> EthStream for EthRpcClient<P, N>
+where
+    P: Provider<N> + Clone,
+    N: Network<HeaderResponse = alloy_rpc_types::Header>,
+{
+    type TxEnvelope = <N as Network>::TransactionResponse;
+
     async fn block_stream(&self) -> eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send> {
         Ok(self.provider.subscribe_blocks().await?.into_stream())
     }
 
-    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = TxEnvelope> + Send> {
+    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
         Ok(self
             .provider
             .subscribe_full_pending_transactions()
             .await?
-            .into_stream()
-            .map(|val| val.inner.clone_inner()))
+            .into_stream())
     }
 
     async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
@@ -86,15 +94,23 @@ impl<P: Provider + Clone> EthStream for EthRpcClient<P> {
     }
 }
 
-impl<P: Provider + Clone> Provider for EthRpcClient<P> {
-    fn root(&self) -> &RootProvider {
+impl<P, N> Provider<N> for EthRpcClient<P, N>
+where
+    P: Provider<N> + Clone,
+    N: Network,
+{
+    fn root(&self) -> &RootProvider<N> {
         self.provider.root()
     }
 }
 
 #[cfg(feature = "revm")]
-impl<P: Provider + Clone> crate::traits::AsyncEthRevm for EthRpcClient<P> {
-    type InnerDb = AlloyDB<alloy_network::Ethereum, P>;
+impl<P, N> crate::traits::AsyncEthRevm for EthRpcClient<P, N>
+where
+    P: Provider<N> + Clone,
+    N: Network,
+{
+    type InnerDb = AlloyDB<N, P>;
 
     fn make_inner_db(
         &self,

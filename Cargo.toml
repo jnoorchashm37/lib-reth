@@ -22,6 +22,7 @@ reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3
 reth-optimism-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
     "serde",
 ] }
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-evm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
@@ -33,8 +34,12 @@ reth-optimism-primitives = { git = "https://github.com/paradigmxyz/reth", versio
 ] }
 reth-db = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, default-features = false, features = [
     "mdbx",
+    "op",
 ] }
 reth-revm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-ethereum = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
+    "node-api",
+] }
 reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-node-types = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 uniswap-storage = { git = "https://github.com/jnoorchashm37/uniswap-storage", optional = true }
@@ -59,6 +64,7 @@ alloy-rpc-types-eth = { version = "1.0.41", default-features = false }
 alloy-consensus = { version = "1.0.41", default-features = false }
 alloy-primitives = { version = "1.4.1", default-features = false }
 op-alloy-network = { version = "0.22.1", optional = true }
+op-alloy-consensus = { version = "0.22.1", optional = true }
 
 
 # revm
@@ -108,6 +114,7 @@ op-reth = [
     "dep:reth-optimism-evm",
     "dep:reth-optimism-rpc",
     "dep:op-alloy-network",
+    "dep:op-alloy-consensus",
 ]
 
 revm = ["revm-database/alloydb"]
@@ -122,6 +129,8 @@ libmdbx = [
     "dep:reth-rpc-eth-types",
     "dep:reth-db",
     "dep:reth-node-types",
+    "dep:reth-ethereum",
+    "dep:reth-primitives-traits",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]
