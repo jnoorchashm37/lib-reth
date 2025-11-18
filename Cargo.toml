@@ -9,52 +9,62 @@ name = "lib_reth"
 path = "src/lib.rs"
 
 [dependencies]
+
 # reth
-reth-provider = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-tasks = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-network-api = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-db = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true, default-features = false, features = [
+reth-provider = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-tasks = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-network-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-optimism-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
+    "serde",
+] }
+reth-optimism-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
+    "serde",
+    "serde-bincode-compat",
+    "reth-codec",
+    "alloy-compat",
+] }
+reth-db = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, default-features = false, features = [
     "mdbx",
 ] }
-reth-revm = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
-reth-node-types = { git = "https://github.com/paradigmxyz/reth", version = "1.8.1", tag = "v1.8.1", optional = true }
+reth-revm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-node-types = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 uniswap-storage = { git = "https://github.com/jnoorchashm37/uniswap-storage", optional = true }
 
 # alloy
-alloy-provider = { version = "1.0.35", default-features = false, features = [
+alloy-provider = { version = "1.0.41", default-features = false, features = [
     "ipc",
     "ws",
     "pubsub",
     "reqwest",
 ] }
-alloy-rpc-client = { version = "1.0.35", default-features = false, features = [
+alloy-rpc-client = { version = "1.0.41", default-features = false, features = [
     "ipc",
     "ws",
     "pubsub",
 ] }
-alloy-network = { version = "1.0.35", default-features = false }
-alloy-rpc-types = { version = "1.0.35", default-features = false, features = [
+alloy-network = { version = "1.0.41", default-features = false }
+alloy-rpc-types = { version = "1.0.41", default-features = false, features = [
     "eth",
 ] }
-alloy-rpc-types-eth = { version = "1.0.35", default-features = false }
-alloy-consensus = { version = "1.0.35", default-features = false }
-alloy-primitives = { version = "1.3.0", default-features = false }
+alloy-rpc-types-eth = { version = "1.0.41", default-features = false }
+alloy-consensus = { version = "1.0.41", default-features = false }
+alloy-primitives = { version = "1.4.1", default-features = false }
 
 # revm
-revm = { version = "27.0.3", features = [
+revm = { version = "33.1.0", features = [
     "std",
     "secp256k1",
     "optional_balance_check",
     "optional_block_gas_limit",
     "c-kzg",
 ], default-features = false }
-revm-database = { version = "7.0.1", default-features = false }
+revm-database = { version = "9.0.5", default-features = false }
 
 # async
 tokio = { version = "1", features = ["full"] }
@@ -75,12 +85,15 @@ serial_test = "3.1"
 
 [features]
 default = ["full"]
-full = ["ipc", "ws", "reth-libmdbx-revm", "uniswap-storage"]
+full = ["ipc", "ws", "reth-libmdbx-revm", "uniswap-storage", "op-reth"]
+
 
 ipc = []
 ws = []
 
 rayon = ["exe-runners/rayon"]
+
+op-reth = ["dep:reth-optimism-chainspec", "dep:reth-optimism-primitives"]
 
 
 reth-libmdbx-revm = ["revm", "libmdbx", "dep:reth-rpc-eth-api", "dep:reth-revm"]
