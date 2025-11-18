@@ -24,6 +24,7 @@ use reth_rpc_eth_api::RpcNodeCore;
 use tokio_stream::wrappers::BroadcastStream;
 
 pub mod node;
+#[cfg(feature = "op-reth-libmdbx")]
 pub mod op_node;
 
 pub trait NodeClientSpec: NodeTypes + Send + Sync {

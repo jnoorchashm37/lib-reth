@@ -6,5 +6,5 @@ mod revm;
 #[cfg(feature = "revm")]
 pub use revm::*;
 
-#[cfg(feature = "reth-libmdbx-revm")]
+#[cfg(feature = "revm")]
 pub mod reth_revm_utils;
