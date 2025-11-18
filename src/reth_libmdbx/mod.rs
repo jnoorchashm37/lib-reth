@@ -7,6 +7,7 @@ use alloy_rpc_types::{
     Header,
 };
 
+mod init2;
 use futures::{Stream, StreamExt};
 use init::{RethApi, RethDbProvider, RethDebug, RethFilter, RethTrace, RethTxPool};
 pub use reth_provider::*;

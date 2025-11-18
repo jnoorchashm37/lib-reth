@@ -22,6 +22,9 @@ reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3
 reth-optimism-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
     "serde",
 ] }
+reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-optimism-evm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-optimism-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
     "serde",
     "serde-bincode-compat",
@@ -55,6 +58,8 @@ alloy-rpc-types = { version = "1.0.41", default-features = false, features = [
 alloy-rpc-types-eth = { version = "1.0.41", default-features = false }
 alloy-consensus = { version = "1.0.41", default-features = false }
 alloy-primitives = { version = "1.4.1", default-features = false }
+op-alloy-network = { version = "0.22.1", optional = true }
+
 
 # revm
 revm = { version = "33.1.0", features = [
@@ -93,10 +98,17 @@ ws = []
 
 rayon = ["exe-runners/rayon"]
 
-op-reth = ["dep:reth-optimism-chainspec", "dep:reth-optimism-primitives"]
-
 
 reth-libmdbx-revm = ["revm", "libmdbx", "dep:reth-rpc-eth-api", "dep:reth-revm"]
+
+op-reth = [
+    "dep:reth-optimism-chainspec",
+    "dep:reth-optimism-primitives",
+    "dep:reth-optimism-node",
+    "dep:reth-optimism-evm",
+    "dep:reth-optimism-rpc",
+    "dep:op-alloy-network",
+]
 
 revm = ["revm-database/alloydb"]
 libmdbx = [
