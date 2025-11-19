@@ -68,6 +68,8 @@ alloy-rpc-types = { version = "1.0.41", default-features = false, features = [
 alloy-rpc-types-eth = { version = "1.0.41", default-features = false }
 alloy-consensus = { version = "1.0.41", default-features = false }
 alloy-primitives = { version = "1.4.1", default-features = false }
+alloy-transport = { version = "1.0.41", default-features = false, optional = true }
+alloy-eips = { version = "1.0.41", default-features = false, optional = true }
 op-alloy-network = { version = "0.22.1", optional = true }
 op-alloy-consensus = { version = "0.22.1", optional = true }
 
@@ -138,6 +140,8 @@ reth-libmdbx = [
     "dep:reth-node-types",
     "dep:reth-primitives-traits",
     "dep:reth-optimism-primitives",
+    "dep:alloy-transport",
+    "dep:alloy-eips",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]

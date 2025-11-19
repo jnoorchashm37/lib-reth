@@ -6,6 +6,8 @@ pub mod reth_libmdbx;
 pub mod rpc;
 pub mod traits;
 
+pub(crate) mod utils;
+
 #[cfg(feature = "reth-libmdbx")]
 pub use reth_chainspec::*;
 

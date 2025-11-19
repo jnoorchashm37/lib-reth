@@ -1,9 +1,17 @@
 use std::{marker::PhantomData, sync::Arc};
 
+use crate::{
+    reth_libmdbx::{NodeClientSpec, RethNodeClient},
+    utils::{RethDbLayer, RethDbProvider},
+};
 use alloy_network::Network;
-use alloy_provider::Provider;
+use alloy_provider::{fillers::*, Identity, Provider, ProviderBuilder};
 
-use crate::reth_libmdbx::{NodeClientSpec, RethNodeClient};
+pub type RethLayerProviderWrapperType<Node, P, N> = FillProvider<
+    JoinFill<Identity, <N as RecommendedFillers>::RecommendedFillers>,
+    RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>,
+    N,
+>;
 
 #[derive(Clone)]
 pub struct DualRethNodeClient<Node, P, N>
@@ -37,5 +45,16 @@ where
 
     pub fn rpc_provider(&self) -> P {
         self.rpc_provider.clone()
+    }
+
+    pub fn as_provider_with_db_layer(&self) -> RethLayerProviderWrapperType<Node, P, N>
+    where
+        N: RecommendedFillers,
+        RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>: Provider<N>,
+    {
+        ProviderBuilder::<_, _, N>::default()
+            .with_recommended_fillers()
+            .layer(RethDbLayer::new(self.node_client.eth_db_provider().clone()))
+            .connect_provider(self.rpc_provider())
     }
 }

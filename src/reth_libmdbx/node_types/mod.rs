@@ -15,7 +15,7 @@ use futures::{Stream, StreamExt};
 use reth_db::DatabaseEnv;
 use reth_node_types::NodeTypes;
 use reth_primitives_traits::size::InMemorySize;
-use reth_provider::StateProviderFactory;
+use reth_provider::{BlockNumReader, DatabaseProviderFactory, StateProviderFactory, TryIntoHistoricalStateProvider};
 use reth_tasks::TaskSpawner;
 use reth_transaction_pool::TransactionPool;
 
@@ -34,7 +34,13 @@ pub trait NodeClientSpec: NodeTypes + Send + Sync {
     type Trace: Clone + Send + Sync;
     type Debug: Clone + Send + Sync;
     type TxPool: Clone + Send + Sync;
-    type DbProvider: StateProviderFactory + CanonStateSubscriptions + Send + Sync;
+    type DbProvider: DatabaseProviderFactory<Provider: TryIntoHistoricalStateProvider + BlockNumReader>
+        + StateProviderFactory
+        + CanonStateSubscriptions
+        + Send
+        + Sync
+        + Clone
+        + 'static;
 
     fn new_with_db<T: TaskSpawner + Clone + 'static>(
         db: Arc<DatabaseEnv>,

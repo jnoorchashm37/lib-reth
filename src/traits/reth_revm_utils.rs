@@ -110,7 +110,11 @@ mod _uniswap_storage {
     use reth_rpc_eth_api::helpers::EthState;
     use uniswap_storage::StorageSlotFetcher;
 
-    use crate::{reth_libmdbx::NodeClientSpec, traits::reth_revm_utils::RethLibmdbxDatabaseRef, DualRethNodeClient};
+    use crate::{
+        reth_libmdbx::{NodeClientSpec, RethNodeClient},
+        traits::reth_revm_utils::RethLibmdbxDatabaseRef,
+        DualRethNodeClient,
+    };
 
     #[async_trait::async_trait]
     impl StorageSlotFetcher for RethLibmdbxDatabaseRef {
@@ -134,6 +138,25 @@ mod _uniswap_storage {
         ) -> eyre::Result<StorageValue> {
             Ok(self
                 .node_client()
+                .eth_api()
+                .storage_at(address, key.into(), block_number.map(Into::into))
+                .await?
+                .into())
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl<Node> StorageSlotFetcher for RethNodeClient<Node>
+    where
+        Node: NodeClientSpec,
+    {
+        async fn storage_at(
+            &self,
+            address: Address,
+            key: StorageKey,
+            block_number: Option<u64>,
+        ) -> eyre::Result<StorageValue> {
+            Ok(self
                 .eth_api()
                 .storage_at(address, key.into(), block_number.map(Into::into))
                 .await?
