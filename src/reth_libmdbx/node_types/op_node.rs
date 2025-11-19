@@ -7,69 +7,6 @@ use reth_rpc_eth_types::{EthConfig, EthFilterConfig};
 use reth_tasks::pool::BlockingTaskGuard;
 use reth_transaction_pool::{validate::EthTransactionValidatorBuilder, PoolConfig};
 
-// struct k {
-//     t: FullNode<
-//         NodeAdapter<
-//             FullNodeTypesAdapter<
-//                 OpNode,
-//                 Arc<DatabaseEnv>,
-//                 BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>,
-//             >,
-//             Components<
-//                 FullNodeTypesAdapter<
-//                     OpNode,
-//                     Arc<DatabaseEnv>,
-//                     BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>,
-//                 >,
-//                 NetworkHandle<BasicNetworkPrimitives<OpPrimitives, OpPooledTransaction, NewBlock<Block<OpTxEnvelope>>>>,
-//                 Pool<
-//                     TransactionValidationTaskExecutor<
-//                         OpTransactionValidator<
-//                             BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>,
-//                             OpPooledTransaction,
-//                         >,
-//                     >,
-//                     CoinbaseTipOrdering<OpPooledTransaction>,
-//                     DiskFileBlobStore,
-//                 >,
-//                 OpEvmConfig,
-//                 Arc<OpBeaconConsensus<OpChainSpec>>,
-//             >,
-//         >,
-//         OpAddOns<
-//             NodeAdapter<
-//                 FullNodeTypesAdapter<
-//                     OpNode,
-//                     Arc<DatabaseEnv>,
-//                     BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>,
-//                 >,
-//                 Components<
-//                     FullNodeTypesAdapter<
-//                         OpNode,
-//                         Arc<DatabaseEnv>,
-//                         BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>,
-//                     >,
-//                     NetworkHandle<BasicNetworkPrimitives<OpPrimitives, OpPooledTransaction, NewBlock<Block<OpTxEnvelope>>>>,
-//                     Pool<
-//                         TransactionValidationTaskExecutor<
-//                             OpTransactionValidator<
-//                                 BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>,
-//                                 OpPooledTransaction,
-//                             >,
-//                         >,
-//                         CoinbaseTipOrdering<OpPooledTransaction>,
-//                         DiskFileBlobStore,
-//                     >,
-//                     OpEvmConfig,
-//                     Arc<OpBeaconConsensus<OpChainSpec>>,
-//                 >,
-//             >,
-//             OpEthApiBuilder,
-//             OpEngineValidatorBuilder,
-//         >,
-//     >,
-// }
-
 use op_alloy_network::Optimism;
 use reth_db::DatabaseEnv;
 use reth_network_api::noop::NoopNetwork;

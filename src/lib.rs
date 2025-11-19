@@ -20,6 +20,8 @@ pub use dual_provider::*;
 #[cfg(feature = "op-reth-libmdbx")]
 pub mod op_reth {
     pub use reth_optimism_chainspec::*;
+    pub use reth_optimism_node::*;
+    pub use reth_optimism_primitives::*;
 }
 
 #[cfg(test)]
