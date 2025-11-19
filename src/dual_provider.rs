@@ -12,7 +12,7 @@ where
     P: Provider<N> + Clone,
     N: Network,
 {
-    db_client: Arc<RethNodeClient<Node>>,
+    node_client: Arc<RethNodeClient<Node>>,
     rpc_provider: P,
     _phantom: PhantomData<N>,
 }
@@ -23,16 +23,16 @@ where
     P: Provider<N> + Clone,
     N: Network,
 {
-    pub fn new(db_client: Arc<RethNodeClient<Node>>, rpc_provider: P) -> Self {
-        Self { db_client, rpc_provider, _phantom: PhantomData }
+    pub fn new(node_client: Arc<RethNodeClient<Node>>, rpc_provider: P) -> Self {
+        Self { node_client, rpc_provider, _phantom: PhantomData }
     }
 
     pub fn replace_rpc_provider(&mut self, rpc_provider: P) {
         self.rpc_provider = rpc_provider;
     }
 
-    pub fn db_client(&self) -> Arc<RethNodeClient<Node>> {
-        self.db_client.clone()
+    pub fn node_client(&self) -> Arc<RethNodeClient<Node>> {
+        self.node_client.clone()
     }
 
     pub fn rpc_provider(&self) -> P {
