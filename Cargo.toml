@@ -22,8 +22,15 @@ reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3
 reth-optimism-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
     "serde",
     "superchain-configs",
+
 ] }
-reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
+    "serde",
+    "serde-bincode-compat",
+    "reth-codec",
+    "rpc-compat",
+    "op",
+] }
 reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-evm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-rpc = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
@@ -96,14 +103,7 @@ serial_test = "3.1"
 
 [features]
 default = ["full"]
-full = [
-    "ipc",
-    "ws",
-    "uniswap-storage",
-    "revm",
-    "reth-libmdbx",
-    "op-reth-libmdbx",
-]
+full = ["ipc", "ws", "uniswap-storage", "revm", "reth-libmdbx"]
 
 
 ipc = []
@@ -137,6 +137,7 @@ reth-libmdbx = [
     "dep:reth-db",
     "dep:reth-node-types",
     "dep:reth-primitives-traits",
+    "dep:reth-optimism-primitives",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]
