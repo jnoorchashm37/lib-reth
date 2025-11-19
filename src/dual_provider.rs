@@ -34,4 +34,8 @@ where
     pub fn db_client(&self) -> Arc<RethNodeClient<Node>> {
         self.db_client.clone()
     }
+
+    pub fn rpc_provider(&self) -> P {
+        self.rpc_provider.clone()
+    }
 }
