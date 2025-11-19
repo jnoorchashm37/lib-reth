@@ -5,6 +5,7 @@ use alloy_provider::Provider;
 
 use crate::reth_libmdbx::{NodeClientSpec, RethNodeClient};
 
+#[derive(Clone)]
 pub struct DualRethNodeClient<Node, P, N>
 where
     Node: NodeClientSpec,
