@@ -8,14 +8,6 @@ pub mod traits;
 
 pub(crate) mod utils;
 
-#[cfg(feature = "reth-libmdbx")]
-pub use reth_chainspec::*;
-
-#[cfg(feature = "reth-libmdbx")]
-pub use reth_rpc_eth_api::*;
-#[cfg(feature = "reth-libmdbx")]
-pub use revm::*;
-
 mod dual_provider;
 pub use dual_provider::*;
 
@@ -24,6 +16,17 @@ pub mod op_reth {
     pub use reth_optimism_chainspec::*;
     pub use reth_optimism_node::*;
     pub use reth_optimism_primitives::*;
+}
+
+#[cfg(feature = "reth-libmdbx")]
+pub use regular_reth::*;
+
+#[cfg(feature = "reth-libmdbx")]
+mod regular_reth {
+    pub use reth_chainspec::*;
+    pub use reth_node_ethereum::EthereumNode;
+    pub use reth_rpc_eth_api::*;
+    pub use revm::*;
 }
 
 #[cfg(test)]
