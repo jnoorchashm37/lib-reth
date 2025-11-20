@@ -476,12 +476,15 @@ where
 
     fn get_transaction_count(&self, address: Address) -> RpcWithBlock<Address, U64, u64> {
         let api = self.node_client().eth_api();
-        let f = async move {
-            api.transaction_count(address)
-                .await
-                .map_err(TransportErrorKind::custom)
-        };
-        ProviderCall::BoxedFuture(f)
+
+        RpcWithBlock::new_provider(move |block_id| {
+            let f = async move {
+                api.transaction_count(address, block_id)
+                    .await
+                    .map_err(TransportErrorKind::custom)
+            };
+            ProviderCall::BoxedFuture(f)
+        })
     }
 
     fn get_transaction_receipt(&self, hash: TxHash) -> ProviderCall<(TxHash,), Option<N::ReceiptResponse>> {
