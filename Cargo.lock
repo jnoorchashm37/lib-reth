@@ -4063,6 +4063,7 @@ dependencies = [
  "exe-runners",
  "eyre",
  "futures",
+ "jsonrpsee-core",
  "op-alloy-consensus",
  "op-alloy-network",
  "reth-chainspec",

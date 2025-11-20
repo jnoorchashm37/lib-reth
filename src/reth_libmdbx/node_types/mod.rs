@@ -20,14 +20,17 @@ use reth_tasks::TaskSpawner;
 use reth_transaction_pool::TransactionPool;
 
 use reth_provider::CanonStateSubscriptions;
-use reth_rpc_eth_api::{helpers::FullEthApi, RpcNodeCore};
+use reth_rpc_eth_api::{helpers::FullEthApi, EthApiTypes, RpcNodeCore};
 use tokio_stream::wrappers::BroadcastStream;
 
 pub mod node;
 #[cfg(feature = "op-reth-libmdbx")]
 pub mod op_node;
 
-pub trait NodeClientSpec: NodeTypes + Send + Sync {
+pub trait NodeClientSpec: NodeTypes + Send + Sync
+where
+    ErrorObject<'static>: From<<Self::Api as EthApiTypes>::Error>,
+{
     type NodeChainSpec: Clone + Send + Sync;
     type Api: FullEthApi + RpcNodeCore + Clone + Send + Sync;
     type Filter: Clone + Send + Sync;

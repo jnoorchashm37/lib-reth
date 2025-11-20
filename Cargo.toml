@@ -98,6 +98,7 @@ eyre = "0.6.5"
 exe-runners = { git = "https://github.com/jnoorchashm37/exe-runners", features = [
     "reth-tasks",
 ] }
+jsonrpsee-ws-client = { version = "0.26.0", optional = true }
 
 [dev-dependencies]
 tokio-stream = "0.1"
@@ -144,6 +145,7 @@ reth-libmdbx = [
     "dep:alloy-transport",
     "dep:alloy-eips",
     "dep:reth-storage-api",
+    "dep:jsonrpsee-ws-client",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]

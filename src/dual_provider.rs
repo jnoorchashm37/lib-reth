@@ -4,20 +4,12 @@ use crate::{
     reth_libmdbx::{NodeClientSpec, RethNodeClient},
     utils::{RethDbLayer, RethDbProvider},
 };
-use alloy_eips::{eip1559::Eip1559Estimation, BlockId, BlockNumberOrTag};
-use alloy_network::{BlockResponse, Network};
+use alloy_network::Network;
 
-use alloy_provider::{
-    fillers::*, utils::Eip1559Estimator, Caller, Empty, EthCall, EthCallMany, EthCallManyParams, EthCallParams, EthGetBlock,
-    GetSubscription, Identity, MulticallBuilder, PendingTransactionBuilder, Provider, ProviderBuilder, RpcWithBlock,
-};
-
-use reth_rpc::RpcTypes;
-use reth_rpc_eth_api::helpers::*;
+use alloy_provider::{fillers::*, Identity, Provider, ProviderBuilder};
 
 pub type RethLayerProviderWrapperType<Node, P, N> =
     FillProvider<Identity, RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>, N>;
-use reth_rpc_eth_api::{helpers::EthTransactions, RpcTxReq};
 
 #[derive(Clone)]
 pub struct DualRethNodeClient<Node, P, N>
