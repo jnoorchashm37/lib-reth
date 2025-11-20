@@ -73,6 +73,7 @@ alloy-transport = { version = "1.0.41", default-features = false, optional = tru
 alloy-eips = { version = "1.0.41", default-features = false, optional = true }
 op-alloy-network = { version = "0.22.1", optional = true }
 op-alloy-consensus = { version = "0.22.1", optional = true }
+jsonrpsee-types = "0.26.0"
 
 
 # revm
