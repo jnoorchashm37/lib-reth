@@ -15,11 +15,8 @@ use alloy_provider::{
 use reth_rpc::RpcTypes;
 use reth_rpc_eth_api::helpers::*;
 
-pub type RethLayerProviderWrapperType<Node, P, N> = FillProvider<
-    JoinFill<Identity, <N as RecommendedFillers>::RecommendedFillers>,
-    RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>,
-    N,
->;
+pub type RethLayerProviderWrapperType<Node, P, N> =
+    FillProvider<Identity, RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>, N>;
 use reth_rpc_eth_api::{helpers::EthTransactions, RpcTxReq};
 
 #[derive(Clone)]
@@ -56,12 +53,12 @@ where
         self.rpc_provider.clone()
     }
 
-    pub fn as_provider_with_db_layer(&self) -> RethLayerProviderWrapperType<Node, P, N>
+    pub fn as_provider_with_db_layer(&self) -> RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>
     where
         RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>: Provider<N>,
     {
-        let t = ProviderBuilder::<_, _, N>::default()
+        ProviderBuilder::<_, _, N>::default()
             .layer(RethDbLayer::new(self.node_client.eth_db_provider().clone()))
-            .connect_provider(self.rpc_provider());
+            .connect_provider(self.rpc_provider())
     }
 }
