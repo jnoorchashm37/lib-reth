@@ -58,12 +58,10 @@ where
 
     pub fn as_provider_with_db_layer(&self) -> RethLayerProviderWrapperType<Node, P, N>
     where
-        N: RecommendedFillers,
         RethDbProvider<P, N, <Node as NodeClientSpec>::DbProvider>: Provider<N>,
     {
-        ProviderBuilder::<_, _, N>::default()
-            .with_recommended_fillers()
+        let t = ProviderBuilder::<_, _, N>::default()
             .layer(RethDbLayer::new(self.node_client.eth_db_provider().clone()))
-            .connect_provider(self.rpc_provider())
+            .connect_provider(self.rpc_provider());
     }
 }
