@@ -4064,7 +4064,6 @@ dependencies = [
  "eyre",
  "futures",
  "jsonrpsee-types",
- "jsonrpsee-ws-client",
  "op-alloy-consensus",
  "op-alloy-network",
  "reth-chainspec",

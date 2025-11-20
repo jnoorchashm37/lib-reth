@@ -127,8 +127,7 @@ mod _uniswap_storage {
     impl<Node, P, N> StorageSlotFetcher for DualRethNodeClient<Node, P, N>
     where
         Node: NodeClientSpec,
-        jsonrpsee_types::error::ErrorObject<'static>:
-            From<<Node::Api as reth_rpc_eth_api::EthApiTypes>::Error>,
+
         P: Provider<N> + Clone,
         N: Network,
     {
@@ -151,8 +150,6 @@ mod _uniswap_storage {
     impl<Node> StorageSlotFetcher for RethNodeClient<Node>
     where
         Node: NodeClientSpec,
-        jsonrpsee_types::error::ErrorObject<'static>:
-            From<<Node::Api as reth_rpc_eth_api::EthApiTypes>::Error>,
     {
         async fn storage_at(
             &self,
