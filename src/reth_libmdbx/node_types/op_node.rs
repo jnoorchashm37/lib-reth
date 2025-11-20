@@ -42,7 +42,10 @@ type OpRethTxPool = Pool<
 
 type OpRethDbProvider = BlockchainProvider<NodeTypesWithDBAdapter<OpNode, Arc<DatabaseEnv>>>;
 
-impl NodeClientSpec for OpNode {
+impl NodeClientSpec for OpNode
+where
+    jsonrpsee_types::error::ErrorObject<'static>: From<<OpEthApi as reth_rpc_eth_api::EthApiTypes>::Error>,
+{
     type NodeChainSpec = OpChainSpec;
     type Api = OpRethApi;
     type Filter = OpRethFilter;

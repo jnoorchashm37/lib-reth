@@ -9,8 +9,8 @@ use reth_node_ethereum::{EthEvmConfig, EthereumNode};
 use reth_node_types::NodeTypesWithDBAdapter;
 use reth_provider::providers::{BlockchainProvider, StaticFileProvider};
 use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
-use reth_rpc_eth_api::node::RpcNodeCoreAdapter;
 use reth_rpc_eth_api::RpcConverter;
+use reth_rpc_eth_api::{node::RpcNodeCoreAdapter, EthApiServer};
 use reth_rpc_eth_types::{receipt::EthReceiptConverter, EthConfig, EthFilterConfig};
 use reth_tasks::{pool::BlockingTaskGuard, TaskSpawner};
 use reth_transaction_pool::{

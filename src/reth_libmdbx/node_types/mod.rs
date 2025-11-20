@@ -12,7 +12,6 @@ use alloy_rpc_types::{
     Header,
 };
 use futures::{Stream, StreamExt};
-use jsonrpsee_types::error::ErrorObject;
 use reth_db::DatabaseEnv;
 use reth_node_types::NodeTypes;
 use reth_primitives_traits::size::InMemorySize;
@@ -21,7 +20,7 @@ use reth_tasks::TaskSpawner;
 use reth_transaction_pool::TransactionPool;
 
 use reth_provider::CanonStateSubscriptions;
-use reth_rpc_eth_api::{helpers::FullEthApi, EthApiServer, EthApiTypes, RpcNodeCore};
+use reth_rpc_eth_api::{helpers::FullEthApi, EthApiTypes, FullEthApiServer, RpcNodeCore};
 use tokio_stream::wrappers::BroadcastStream;
 
 pub mod node;
@@ -30,7 +29,7 @@ pub mod op_node;
 
 pub trait NodeClientSpec: NodeTypes + Send + Sync {
     type NodeChainSpec: Clone + Send + Sync;
-    type Api: FullEthApi + EthApiTypes + RpcNodeCore + Clone + Send + Sync;
+    type Api: FullEthApi + FullEthApiServer + EthApiTypes + RpcNodeCore + Clone + Send + Sync;
     type Filter: Clone + Send + Sync;
     type Trace: Clone + Send + Sync;
     type Debug: Clone + Send + Sync;
@@ -89,14 +88,6 @@ impl<N: NodeClientSpec> RethNodeClient<N> {
 
     pub fn eth_db_provider(&self) -> &N::DbProvider {
         &self.db_provider
-    }
-
-    pub async fn get_block_by_number(&self) {
-        let block = self
-            .eth_api()
-            .block_by_number(alloy_eips::BlockNumberOrTag::Latest, true)
-            .await
-            .unwrap();
     }
 }
 

@@ -73,7 +73,6 @@ alloy-transport = { version = "1.0.41", default-features = false, optional = tru
 alloy-eips = { version = "1.0.41", default-features = false, optional = true }
 op-alloy-network = { version = "0.22.1", optional = true }
 op-alloy-consensus = { version = "0.22.1", optional = true }
-jsonrpsee-types = "0.26.0"
 
 
 # revm
@@ -99,7 +98,7 @@ eyre = "0.6.5"
 exe-runners = { git = "https://github.com/jnoorchashm37/exe-runners", features = [
     "reth-tasks",
 ] }
-jsonrpsee-ws-client = { version = "0.26.0", optional = true }
+jsonrpsee-types = { version = "0.26.0", optional = true }
 
 [dev-dependencies]
 tokio-stream = "0.1"
@@ -146,7 +145,7 @@ reth-libmdbx = [
     "dep:alloy-transport",
     "dep:alloy-eips",
     "dep:reth-storage-api",
-    "dep:jsonrpsee-ws-client",
+    "dep:jsonrpsee-types",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]
