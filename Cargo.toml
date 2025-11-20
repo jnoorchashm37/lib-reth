@@ -46,6 +46,7 @@ reth-db = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag 
 ] }
 reth-revm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-rpc-eth-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-storage-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-node-types = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 uniswap-storage = { git = "https://github.com/jnoorchashm37/uniswap-storage", optional = true }
 
@@ -142,6 +143,7 @@ reth-libmdbx = [
     "dep:reth-optimism-primitives",
     "dep:alloy-transport",
     "dep:alloy-eips",
+    "dep:reth-storage-api",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]

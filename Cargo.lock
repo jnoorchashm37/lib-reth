@@ -4081,6 +4081,7 @@ dependencies = [
  "reth-rpc",
  "reth-rpc-eth-api",
  "reth-rpc-eth-types",
+ "reth-storage-api",
  "reth-tasks",
  "reth-transaction-pool",
  "revm 33.1.0",
