@@ -1,9 +1,9 @@
-use alloy_consensus::{BlockHeader, Sealable, TxReceipt};
+use alloy_consensus::transaction::TransactionMeta;
 use alloy_primitives::BlockNumber;
 use alloy_rpc_types::Log;
 use parking_lot::RwLock;
 use reth_node_types::NodePrimitives;
-use reth_provider::{BlockNumReader, BlockReader, HeaderProvider, ReceiptProvider};
+use reth_provider::{BlockNumReader, BlockReader, ReceiptProvider};
 use reth_rpc_eth_api::RpcNodeCore;
 use std::time::Duration;
 use tokio::{sync::broadcast, task::JoinHandle};
@@ -204,41 +204,50 @@ enum LiveStateStreamKind {
 }
 
 fn get_latest_logs<N: NodeClientSpec>(db_api: &N::Api, block_number: BlockNumber) -> Result<NodeLogs, LiveStateStreamError> {
-    let Some(block_header) = db_api
-        .provider()
-        .header_by_number(block_number.into())
+    let provider = db_api.provider();
+    let block = provider
+        .block_by_number(block_number.into())
         .map_err(|e| LiveStateStreamError::FailedToGetData(block_number, e.to_string()))?
-    else {
-        return Ok(Vec::new());
-    };
+        .ok_or(LiveStateStreamError::NoData)?;
 
-    db_api
-        .provider()
+    let sealed_block = block.seal_slow();
+    let header = sealed_block.header();
+    let block_hash = sealed_block.hash();
+    let block_number = header.number();
+    let block_timestamp = header.timestamp();
+    let base_fee = header.base_fee_per_gas();
+    let excess_blob_gas = header.excess_blob_gas();
+
+    let receipts = provider
         .receipts_by_block(block_number.into())
-        .map(|receipts| {
-            receipts
-                .unwrap_or_default()
-                .into_iter()
-                .flat_map(|receipt| {
-                    receipt
-                        .logs()
-                        .iter()
-                        .enumerate()
-                        .map(|(i, log)| Log {
-                            inner: log.clone(),
-                            block_hash: Some(block_header.hash_slow()),
-                            block_number: Some(block_number as u64),
-                            block_timestamp: Some(block_header.timestamp()),
-                            transaction_hash: None,
-                            transaction_index: None,
-                            log_index: Some(i as u64),
-                            removed: false,
-                        })
-                        .collect::<Vec<_>>()
-                })
-                .collect::<Vec<_>>()
-        })
-        .map_err(|e| LiveStateStreamError::FailedToGetData(block_number, e.to_string()))
+        .map_err(|e| LiveStateStreamError::FailedToGetData(block_number, e.to_string()))?
+        .unwrap_or_default();
+
+    let transactions = sealed_block.body().transactions();
+    let mut next_log_index = 0usize;
+    let mut out = Vec::new();
+
+    for (tx_index, receipt) in receipts.into_iter().enumerate() {
+        let tx = transactions.get(tx_index).ok_or_else(|| {
+            LiveStateStreamError::FailedToGetData(block_number, format!("missing transaction at index {tx_index} for block"))
+        })?;
+
+        let meta = TransactionMeta {
+            tx_hash: *tx.tx_hash(),
+            index: tx_index as u64,
+            block_hash,
+            block_number,
+            base_fee,
+            excess_blob_gas,
+            timestamp: block_timestamp,
+        };
+
+        let mut collected = Log::collect_for_receipt(next_log_index, meta, receipt.logs().iter().cloned());
+        next_log_index += collected.len();
+        out.append(&mut collected);
+    }
+
+    Ok(out)
 }
 
 fn get_latest_block<N: NodeClientSpec>(
