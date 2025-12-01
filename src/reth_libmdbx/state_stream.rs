@@ -104,6 +104,10 @@ impl<N: NodeClientSpec> LiveStateStream<N> {
         let (tx, _) = broadcast::channel(DEFAULT_CHANNEL_CAPACITY);
         let poll_time_ms = chain.get_default_poll_time_ms_for_chain();
         let stream = StateStream::<N, T>::new(db_api, fetch_fn, tx.clone(), poll_time_ms);
+        println!(
+            "[LiveStateStream::{:?}] spawning stream with poll interval {}ms",
+            kind, poll_time_ms
+        );
         let join = tokio::spawn(async move {
             stream.run().await;
         });
@@ -151,6 +155,7 @@ impl<N: NodeClientSpec, T: Clone + Send + 'static> StateStream<N, T> {
 
         loop {
             if self.tx.receiver_count() == 0 {
+                println!("[StateStream] no subscribers; sleeping {}", self.sleep_interval_ms);
                 tokio::time::sleep(sleep_duration).await;
                 continue;
             }
@@ -158,12 +163,23 @@ impl<N: NodeClientSpec, T: Clone + Send + 'static> StateStream<N, T> {
             match self.next_best_block() {
                 Some(next_block_number) => {
                     if last_block != Some(next_block_number) {
+                        println!(
+                            "[StateStream] fetching data for block {} (prev: {:?})",
+                            next_block_number, last_block
+                        );
                         let data = (self.fetch_fn)(&self.db_api, next_block_number);
                         let _ = self.tx.send(data);
                         last_block = Some(next_block_number);
+                    } else {
+                        println!(
+                            "[StateStream] best block unchanged at {}, skipping fetch",
+                            next_block_number
+                        );
                     }
                 }
-                None => (),
+                None => {
+                    println!("[StateStream] next_best_block returned None");
+                }
             }
 
             tokio::time::sleep(sleep_duration).await;
@@ -172,8 +188,12 @@ impl<N: NodeClientSpec, T: Clone + Send + 'static> StateStream<N, T> {
 
     fn next_best_block(&self) -> Option<BlockNumber> {
         match self.db_api.provider().best_block_number() {
-            Ok(v) => Some(v),
+            Ok(v) => {
+                println!("[StateStream] best_block_number -> {}", v);
+                Some(v)
+            }
             Err(err) => {
+                println!("[StateStream] failed to fetch best block: {}", err);
                 let _ = self
                     .tx
                     .send(Err(LiveStateStreamError::FailedToFetchBestBlock(err.to_string())));

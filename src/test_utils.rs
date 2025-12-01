@@ -11,7 +11,7 @@ pub async fn stream_timeout<O: Debug>(
     let mut sub_stream = stream.take(values);
     let f = async move {
         let mut vals = values;
-        while let Some(v) = sub_stream.next().await {
+        while let Some(_) = sub_stream.next().await {
             println!("recieved stream value");
             vals -= 1;
             if vals == 0 {
