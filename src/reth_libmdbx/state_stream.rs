@@ -1,9 +1,10 @@
-use alloy_consensus::transaction::TransactionMeta;
+use alloy_consensus::{transaction::{TransactionMeta, TxHashRef}, BlockHeader, TxReceipt};
 use alloy_primitives::BlockNumber;
 use alloy_rpc_types::Log;
 use parking_lot::RwLock;
 use reth_node_types::NodePrimitives;
 use reth_provider::{BlockNumReader, BlockReader, ReceiptProvider};
+use reth_primitives_traits::{Block, BlockBody};
 use reth_rpc_eth_api::RpcNodeCore;
 use std::time::Duration;
 use tokio::{sync::broadcast, task::JoinHandle};
