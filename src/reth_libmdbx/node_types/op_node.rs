@@ -3,6 +3,7 @@ use std::{path::PathBuf, sync::Arc};
 use alloy_primitives::U256;
 use alloy_rpc_types::TransactionInfo;
 use op_alloy_consensus::transaction::{OpDepositInfo, OpTransactionInfo};
+use reth_chainspec::EthChainSpec;
 use reth_rpc_eth_types::{EthConfig, EthFilterConfig};
 use reth_tasks::pool::BlockingTaskGuard;
 use reth_transaction_pool::{validate::EthTransactionValidatorBuilder, PoolConfig};
@@ -25,7 +26,7 @@ use reth_rpc::{DebugApi, EthApi, EthFilter, TraceApi};
 use reth_rpc_eth_api::{node::RpcNodeCoreAdapter, RpcConverter, TxInfoMapper};
 use reth_transaction_pool::{blobstore::NoopBlobStore, CoinbaseTipOrdering, Pool, TransactionValidationTaskExecutor};
 
-use crate::reth_libmdbx::{NodeClientSpec, RethNodeClient};
+use crate::reth_libmdbx::{state_stream::LiveStateStream, NodeClientSpec, RethNodeClient, SupportedChains};
 
 type OpRethApi = OpEthApi<
     RpcNodeCoreAdapter<OpRethDbProvider, OpRethTxPool, NoopNetwork, OpEvmConfig>,
@@ -94,7 +95,21 @@ impl NodeClientSpec for OpNode {
         let debug = DebugApi::new(api.clone(), tracing_call_guard);
         let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 
-        Ok(RethNodeClient { api, trace, filter, debug, tx_pool, db_provider: blockchain_provider, chain_spec })
+        let chain =
+            SupportedChains::from_chain_id(chain_spec.chain_id()).ok_or_else(|| eyre::eyre!("chain no supported"))?;
+        let live_state_stream = LiveStateStream::new(api.clone(), chain);
+
+        Ok(RethNodeClient {
+            api,
+            trace,
+            filter,
+            debug,
+            tx_pool,
+            db_provider: blockchain_provider,
+            chain_spec,
+            live_state_stream,
+            chain,
+        })
     }
 }
 

@@ -17,6 +17,7 @@ reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", version = "1
 reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-tasks = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-network-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
+reth-node-builder = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
@@ -99,6 +100,9 @@ exe-runners = { git = "https://github.com/jnoorchashm37/exe-runners", features =
     "reth-tasks",
 ] }
 jsonrpsee-types = { version = "0.26.0", optional = true }
+thiserror = "2"
+parking_lot = "0.12"
+
 
 [dev-dependencies]
 tokio-stream = "0.1"
@@ -106,7 +110,7 @@ serial_test = "3.1"
 
 
 [features]
-default = ["full"]
+default = ["full", "op-reth-libmdbx"]
 full = ["ipc", "ws", "uniswap-storage", "revm", "reth-libmdbx"]
 
 
@@ -146,6 +150,7 @@ reth-libmdbx = [
     "dep:alloy-eips",
     "dep:reth-storage-api",
     "dep:jsonrpsee-types",
+    "dep:reth-node-builder",
 ]
 
 uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]

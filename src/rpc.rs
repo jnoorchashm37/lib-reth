@@ -68,6 +68,8 @@ where
     N: Network<HeaderResponse = alloy_rpc_types::Header>,
 {
     type TxEnvelope = <N as Network>::TransactionResponse;
+    type FullBlock = alloy_rpc_types_eth::Header;
+    type ReceiptLog = Log;
 
     async fn block_stream(&self) -> eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send> {
         Ok(self.provider.subscribe_blocks().await?.into_stream())

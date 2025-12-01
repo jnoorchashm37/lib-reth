@@ -1,7 +1,7 @@
 use std::{path::PathBuf, sync::Arc};
 
 use alloy_network::Ethereum;
-use reth_chainspec::ChainSpec;
+use reth_chainspec::{ChainSpec, EthChainSpec};
 use reth_db::DatabaseEnv;
 
 use reth_network_api::noop::NoopNetwork;
@@ -18,7 +18,7 @@ use reth_transaction_pool::{
     EthTransactionValidator, Pool, PoolConfig, TransactionValidationTaskExecutor,
 };
 
-use crate::reth_libmdbx::{NodeClientSpec, RethNodeClient};
+use crate::reth_libmdbx::{state_stream::LiveStateStream, NodeClientSpec, RethNodeClient, SupportedChains};
 
 type RethApi = EthApi<
     RpcNodeCoreAdapter<RethDbProvider, RethTxPool, NoopNetwork, EthEvmConfig>,
@@ -74,7 +74,21 @@ impl NodeClientSpec for EthereumNode {
         let debug = DebugApi::new(api.clone(), tracing_call_guard);
         let filter = EthFilter::new(api.clone(), EthFilterConfig::default(), Box::new(task_executor.clone()));
 
-        Ok(RethNodeClient { api, trace, filter, debug, tx_pool, db_provider: blockchain_provider, chain_spec })
+        let chain =
+            SupportedChains::from_chain_id(chain_spec.chain_id()).ok_or_else(|| eyre::eyre!("chain no supported"))?;
+        let live_state_stream = LiveStateStream::new(api.clone(), chain);
+
+        Ok(RethNodeClient {
+            api,
+            trace,
+            filter,
+            debug,
+            tx_pool,
+            db_provider: blockchain_provider,
+            chain_spec,
+            live_state_stream,
+            chain,
+        })
     }
 }
 

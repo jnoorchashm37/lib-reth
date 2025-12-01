@@ -1,9 +1,16 @@
-use std::path::PathBuf;
 use std::sync::Arc;
+use std::{path::PathBuf, pin::Pin};
 
+use crate::reth_libmdbx::state_stream::LiveStateStreamError;
 #[cfg(feature = "revm")]
 use crate::traits::BlockNumberOrHash;
-use crate::traits::EthStream;
+use crate::{
+    reth_libmdbx::{
+        state_stream::{LiveStateStream, NodeBlock, NodeReceipts},
+        SupportedChains,
+    },
+    traits::EthStream,
+};
 
 use alloy_consensus::BlockHeader;
 use alloy_primitives::{TxHash, U256};
@@ -21,7 +28,7 @@ use reth_transaction_pool::TransactionPool;
 
 use reth_provider::CanonStateSubscriptions;
 use reth_rpc_eth_api::{helpers::FullEthApi, EthApiTypes, FullEthApiServer, RpcNodeCore};
-use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::wrappers::{BroadcastStream, ReceiverStream};
 
 pub mod node;
 #[cfg(feature = "op-reth-libmdbx")]
@@ -58,6 +65,8 @@ pub struct RethNodeClient<N: NodeClientSpec> {
     debug: N::Debug,
     tx_pool: N::TxPool,
     db_provider: N::DbProvider,
+    live_state_stream: LiveStateStream<N>,
+    chain: SupportedChains,
     chain_spec: Arc<<N as NodeClientSpec>::NodeChainSpec>,
 }
 
@@ -93,48 +102,58 @@ impl<N: NodeClientSpec> RethNodeClient<N> {
 
 impl<N: NodeClientSpec> EthStream for RethNodeClient<N> {
     type TxEnvelope = <<<N as NodeClientSpec>::Api as RpcNodeCore>::Pool as TransactionPool>::Transaction;
+    type FullBlock = Result<NodeBlock<N>, LiveStateStreamError>;
+    type ReceiptLog = Result<NodeReceipts<N>, LiveStateStreamError>;
 
-    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Header> + Send> {
-        let stream = self
-            .eth_db_provider()
-            .canonical_state_stream()
-            .flat_map(|new_chain| {
-                let sealed_blocks = new_chain
-                    .committed()
-                    .blocks_iter()
-                    .map(|sealed_block| Header {
-                        hash: sealed_block.hash(),
-                        total_difficulty: Some(sealed_block.difficulty()),
-                        size: Some(U256::from(sealed_block.size())),
-                        inner: alloy_consensus::Header {
-                            parent_hash: sealed_block.parent_hash(),
-                            ommers_hash: sealed_block.ommers_hash(),
-                            beneficiary: sealed_block.beneficiary(),
-                            state_root: sealed_block.state_root(),
-                            transactions_root: sealed_block.transactions_root(),
-                            receipts_root: sealed_block.receipts_root(),
-                            logs_bloom: sealed_block.logs_bloom(),
-                            difficulty: sealed_block.difficulty(),
-                            number: sealed_block.number(),
-                            gas_limit: sealed_block.gas_limit(),
-                            gas_used: sealed_block.gas_used(),
-                            timestamp: sealed_block.timestamp(),
-                            extra_data: sealed_block.extra_data().clone(),
-                            mix_hash: sealed_block.mix_hash().unwrap(),
-                            nonce: sealed_block.nonce().unwrap(),
-                            base_fee_per_gas: sealed_block.base_fee_per_gas(),
-                            withdrawals_root: sealed_block.withdrawals_root(),
-                            blob_gas_used: sealed_block.blob_gas_used(),
-                            excess_blob_gas: sealed_block.excess_blob_gas(),
-                            parent_beacon_block_root: sealed_block.parent_beacon_block_root(),
-                            requests_hash: sealed_block.requests_hash(),
-                        },
-                    })
-                    .collect::<Vec<_>>();
-                futures::stream::iter(sealed_blocks)
-            });
+    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Self::FullBlock> + Send> {
+        let rx = BroadcastStream::new(self.live_state_stream.subscribe_blocks()).map(|v| match v {
+            Ok(Ok(v)) => Ok(v),
+            Ok(Err(e)) => Err(e),
+            Err(e) => Err(LiveStateStreamError::StreamError(e.to_string())),
+        });
+        let t = Box::pin(rx) as Pin<Box<dyn Stream<Item = Self::FullBlock> + Send + Sync>>;
+        // let stream = self
+        //     .eth_db_provider()
+        //     .canonical_state_stream()
+        //     .flat_map(|new_chain| {
+        //         let sealed_blocks = new_chain
+        //             .committed()
+        //             .blocks_iter()
+        //             .map(|sealed_block| Header {
+        //                 hash: sealed_block.hash(),
+        //                 total_difficulty: Some(sealed_block.difficulty()),
+        //                 size: Some(U256::from(sealed_block.size())),
+        //                 inner: alloy_consensus::Header {
+        //                     parent_hash: sealed_block.parent_hash(),
+        //                     ommers_hash: sealed_block.ommers_hash(),
+        //                     beneficiary: sealed_block.beneficiary(),
+        //                     state_root: sealed_block.state_root(),
+        //                     transactions_root: sealed_block.transactions_root(),
+        //                     receipts_root: sealed_block.receipts_root(),
+        //                     logs_bloom: sealed_block.logs_bloom(),
+        //                     difficulty: sealed_block.difficulty(),
+        //                     number: sealed_block.number(),
+        //                     gas_limit: sealed_block.gas_limit(),
+        //                     gas_used: sealed_block.gas_used(),
+        //                     timestamp: sealed_block.timestamp(),
+        //                     extra_data: sealed_block.extra_data().clone(),
+        //                     mix_hash: sealed_block.mix_hash().unwrap(),
+        //                     nonce: sealed_block.nonce().unwrap(),
+        //                     base_fee_per_gas: sealed_block.base_fee_per_gas(),
+        //                     withdrawals_root: sealed_block.withdrawals_root(),
+        //                     blob_gas_used: sealed_block.blob_gas_used(),
+        //                     excess_blob_gas: sealed_block.excess_blob_gas(),
+        //                     parent_beacon_block_root: sealed_block.parent_beacon_block_root(),
+        //                     requests_hash: sealed_block.requests_hash(),
+        //                 },
+        //             })
+        //             .collect::<Vec<_>>();
+        //         futures::stream::iter(sealed_blocks)
+        //     });
 
-        Ok(stream)
+        // Ok(stream)
+
+        Ok(t)
     }
 
     async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {

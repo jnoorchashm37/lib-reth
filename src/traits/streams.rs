@@ -5,11 +5,11 @@ use futures::{Future, Stream};
 /// `eth_subscribe`
 pub trait EthStream {
     type TxEnvelope;
+    type FullBlock;
+    type ReceiptLog;
 
     /// `newHeads`
-    fn block_stream(
-        &self,
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send>> + Send;
+    fn block_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Self::FullBlock> + Send>> + Send;
 
     /// `newPendingTransactions` (true)
     fn full_pending_transaction_stream(
