@@ -108,25 +108,25 @@ impl<N: NodeClientSpec> EthStream for RethNodeClient<N> {
         Ok(Box::pin(rx) as Pin<Box<dyn Stream<Item = Result<Self::FullBlock, LiveStateStreamError>> + Send + Sync>>)
     }
 
-    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
-        let stream = self
-            .eth_api()
-            .pool()
-            .new_pending_pool_transactions_listener()
-            .map(|pooled_tx| pooled_tx.transaction.transaction.clone());
+    // async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
+    //     let stream = self
+    //         .eth_api()
+    //         .pool()
+    //         .new_pending_pool_transactions_listener()
+    //         .map(|pooled_tx| pooled_tx.transaction.transaction.clone());
 
-        Ok(stream)
-    }
+    //     Ok(stream)
+    // }
 
-    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
-        let stream = self
-            .eth_api()
-            .pool()
-            .new_pending_pool_transactions_listener()
-            .map(|tx| *tx.transaction.hash());
+    // async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
+    //     let stream = self
+    //         .eth_api()
+    //         .pool()
+    //         .new_pending_pool_transactions_listener()
+    //         .map(|tx| *tx.transaction.hash());
 
-        Ok(stream)
-    }
+    //     Ok(stream)
+    // }
 
     async fn log_stream(
         &self,

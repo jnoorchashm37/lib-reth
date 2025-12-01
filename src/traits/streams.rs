@@ -14,15 +14,15 @@ pub trait EthStream {
         &self,
     ) -> impl Future<Output = eyre::Result<impl Stream<Item = Result<Self::FullBlock, LiveStateStreamError>> + Send>> + Send;
 
-    /// `newPendingTransactions` (true)
-    fn full_pending_transaction_stream(
-        &self,
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send>> + Send;
+    // /// `newPendingTransactions` (true)
+    // fn full_pending_transaction_stream(
+    //     &self,
+    // ) -> impl Future<Output = eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send>> + Send;
 
-    /// `newPendingTransactions` (false)
-    fn pending_transaction_hashes_stream(
-        &self,
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>> + Send;
+    // /// `newPendingTransactions` (false)
+    // fn pending_transaction_hashes_stream(
+    //     &self,
+    // ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>> + Send;
 
     /// `logs`
     fn log_stream(

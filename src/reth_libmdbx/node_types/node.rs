@@ -109,42 +109,6 @@ mod tests {
 
     use crate::reth_libmdbx::RethNodeClientBuilder;
 
-    // #[tokio::test]
-    // async fn test_read_live_blocks() {
-    //     let reth_client = RethNodeClientBuilder::<EthereumNode>::new("/var/lib/eth/mainnet/reth", 100000, MAINNET.clone())
-    //         .build()
-    //         .unwrap();
-
-    //     let ipc_builder = ClientBuilder::default()
-    //         .ipc(IpcConnect::new("/tmp/mainnet/reth.ipc".to_string()))
-    //         .await
-    //         .unwrap();
-    //     let ipc_provider = RootProvider::<Ethereum>::new(ipc_builder);
-
-    //     let mut block_stream = ipc_provider
-    //         .subscribe_blocks()
-    //         .await
-    //         .unwrap()
-    //         .into_stream()
-    //         .take(5);
-
-    //     while let Some(block_header) = block_stream.next().await {
-    //         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-    //         reth_client
-    //             .eth_db_provider()
-    //             .static_file_provider()
-    //             .initialize_index()
-    //             .unwrap();
-
-    //         let full_block = reth_client
-    //             .eth_api()
-    //             .block_by_number(block_header.number.into(), true)
-    //             .await
-    //             .unwrap();
-    //         assert!(full_block.is_some())
-    //     }
-    // }
-
     #[tokio::test]
     #[serial_test::serial]
     async fn can_build() {
@@ -172,23 +136,23 @@ mod tests {
         assert!(stream_timeout(log_stream, 2, 30).await.is_ok());
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    #[serial_test::serial]
-    async fn test_full_pending_transaction_stream() {
-        let builder = RethNodeClientBuilder::<EthereumNode>::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
-        let client = builder.build().unwrap();
+    // #[tokio::test(flavor = "multi_thread")]
+    // #[serial_test::serial]
+    // async fn test_full_pending_transaction_stream() {
+    //     let builder = RethNodeClientBuilder::<EthereumNode>::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
+    //     let client = builder.build().unwrap();
 
-        let mempool_full_stream = client.full_pending_transaction_stream().await.unwrap();
-        assert!(stream_timeout(mempool_full_stream, 2, 30).await.is_ok());
-    }
+    //     let mempool_full_stream = client.full_pending_transaction_stream().await.unwrap();
+    //     assert!(stream_timeout(mempool_full_stream, 2, 30).await.is_ok());
+    // }
 
-    #[tokio::test(flavor = "multi_thread")]
-    #[serial_test::serial]
-    async fn test_pending_transaction_hashes_stream() {
-        let builder = RethNodeClientBuilder::<EthereumNode>::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
-        let client = builder.build().unwrap();
+    // #[tokio::test(flavor = "multi_thread")]
+    // #[serial_test::serial]
+    // async fn test_pending_transaction_hashes_stream() {
+    //     let builder = RethNodeClientBuilder::<EthereumNode>::new("/var/lib/eth/mainnet/reth/", 1000, MAINNET.clone());
+    //     let client = builder.build().unwrap();
 
-        let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
-        assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
-    }
+    //     let mempool_hash_stream = client.pending_transaction_hashes_stream().await.unwrap();
+    //     assert!(stream_timeout(mempool_hash_stream, 2, 30).await.is_ok());
+    // }
 }

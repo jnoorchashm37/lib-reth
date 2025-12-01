@@ -83,21 +83,21 @@ where
             .map(|v| Ok(v)))
     }
 
-    async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
-        Ok(self
-            .provider
-            .subscribe_full_pending_transactions()
-            .await?
-            .into_stream())
-    }
+    // async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
+    //     Ok(self
+    //         .provider
+    //         .subscribe_full_pending_transactions()
+    //         .await?
+    //         .into_stream())
+    // }
 
-    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
-        Ok(self
-            .provider
-            .subscribe_pending_transactions()
-            .await?
-            .into_stream())
-    }
+    // async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
+    //     Ok(self
+    //         .provider
+    //         .subscribe_pending_transactions()
+    //         .await?
+    //         .into_stream())
+    // }
 
     async fn log_stream(
         &self,
