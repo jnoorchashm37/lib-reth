@@ -1,14 +1,16 @@
+use alloy_consensus::{BlockHeader, Sealable, TxReceipt};
 use alloy_primitives::BlockNumber;
+use alloy_rpc_types::Log;
 use parking_lot::RwLock;
 use reth_node_types::NodePrimitives;
-use reth_provider::{BlockNumReader, BlockReader, ReceiptProvider};
+use reth_provider::{BlockNumReader, BlockReader, HeaderProvider, ReceiptProvider};
 use reth_rpc_eth_api::RpcNodeCore;
 use std::time::Duration;
 use tokio::{sync::broadcast, task::JoinHandle};
 
 use crate::reth_libmdbx::{NodeClientSpec, SupportedChains};
 
-pub type NodeReceipts<N> = Vec<<<<N as NodeClientSpec>::Api as RpcNodeCore>::Primitives as NodePrimitives>::Receipt>;
+pub type NodeLogs = Vec<Log>;
 pub type NodeBlock<N> = Option<<<<N as NodeClientSpec>::Api as RpcNodeCore>::Primitives as NodePrimitives>::Block>;
 
 const DEFAULT_CHANNEL_CAPACITY: usize = 1024;
@@ -16,7 +18,7 @@ const DEFAULT_CHANNEL_CAPACITY: usize = 1024;
 pub struct LiveStateStream<N: NodeClientSpec> {
     db_api: N::Api,
     chain: SupportedChains,
-    logs_stream: RwLock<Option<StreamHandle<NodeReceipts<N>>>>,
+    logs_stream: RwLock<Option<StreamHandle<NodeLogs>>>,
     blocks_stream: RwLock<Option<StreamHandle<NodeBlock<N>>>>,
 }
 
@@ -25,7 +27,7 @@ impl<N: NodeClientSpec> LiveStateStream<N> {
         Self { db_api, chain, logs_stream: RwLock::new(None), blocks_stream: RwLock::new(None) }
     }
 
-    pub fn subscribe_logs(&self) -> broadcast::Receiver<Result<NodeReceipts<N>, LiveStateStreamError>> {
+    pub fn subscribe_logs(&self) -> broadcast::Receiver<Result<NodeLogs, LiveStateStreamError>> {
         self.ensure_logs_stream();
         let guard = self.logs_stream.read();
         guard
@@ -104,7 +106,6 @@ impl<N: NodeClientSpec> LiveStateStream<N> {
         let (tx, _) = broadcast::channel(DEFAULT_CHANNEL_CAPACITY);
         let poll_time_ms = chain.get_default_poll_time_ms_for_chain();
         let stream = StateStream::<N, T>::new(db_api, fetch_fn, tx.clone(), poll_time_ms);
-        println!("[LiveStateStream::{:?}] spawning stream with poll interval {}ms", kind, poll_time_ms);
         let join = tokio::spawn(async move {
             stream.run().await;
         });
@@ -152,7 +153,6 @@ impl<N: NodeClientSpec, T: Clone + Send + 'static> StateStream<N, T> {
 
         loop {
             if self.tx.receiver_count() == 0 {
-                println!("[StateStream] no subscribers; sleeping {}", self.sleep_interval_ms);
                 tokio::time::sleep(sleep_duration).await;
                 continue;
             }
@@ -160,17 +160,12 @@ impl<N: NodeClientSpec, T: Clone + Send + 'static> StateStream<N, T> {
             match self.next_best_block() {
                 Some(next_block_number) => {
                     if last_block != Some(next_block_number) {
-                        println!("[StateStream] fetching data for block {} (prev: {:?})", next_block_number, last_block);
                         let data = (self.fetch_fn)(&self.db_api, next_block_number);
                         let _ = self.tx.send(data);
                         last_block = Some(next_block_number);
-                    } else {
-                        println!("[StateStream] best block unchanged at {}, skipping fetch", next_block_number);
                     }
                 }
-                None => {
-                    println!("[StateStream] next_best_block returned None");
-                }
+                None => {}
             }
 
             tokio::time::sleep(sleep_duration).await;
@@ -179,12 +174,8 @@ impl<N: NodeClientSpec, T: Clone + Send + 'static> StateStream<N, T> {
 
     fn next_best_block(&self) -> Option<BlockNumber> {
         match self.db_api.provider().last_block_number() {
-            Ok(v) => {
-                println!("[StateStream] best_block_number -> {}", v);
-                Some(v)
-            }
+            Ok(v) => Some(v),
             Err(err) => {
-                println!("[StateStream] failed to fetch best block: {}", err);
                 let _ = self
                     .tx
                     .send(Err(LiveStateStreamError::FailedToFetchBestBlock(err.to_string())));
@@ -212,14 +203,41 @@ enum LiveStateStreamKind {
     Blocks,
 }
 
-fn get_latest_logs<N: NodeClientSpec>(
-    db_api: &N::Api,
-    block_number: BlockNumber,
-) -> Result<NodeReceipts<N>, LiveStateStreamError> {
+fn get_latest_logs<N: NodeClientSpec>(db_api: &N::Api, block_number: BlockNumber) -> Result<NodeLogs, LiveStateStreamError> {
+    let Some(block_header) = db_api
+        .provider()
+        .header_by_number(block_number.into())
+        .map_err(|e| LiveStateStreamError::FailedToGetData(block_number, e.to_string()))?
+    else {
+        return Ok(Vec::new());
+    };
+
     db_api
         .provider()
         .receipts_by_block(block_number.into())
-        .map(|v| v.unwrap_or_default())
+        .map(|receipts| {
+            receipts
+                .unwrap_or_default()
+                .into_iter()
+                .flat_map(|receipt| {
+                    receipt
+                        .logs()
+                        .iter()
+                        .enumerate()
+                        .map(|(i, log)| Log {
+                            inner: log.clone(),
+                            block_hash: Some(block_header.hash_slow()),
+                            block_number: Some(block_number as u64),
+                            block_timestamp: Some(block_header.timestamp()),
+                            transaction_hash: None,
+                            transaction_index: None,
+                            log_index: Some(i as u64),
+                            removed: false,
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        })
         .map_err(|e| LiveStateStreamError::FailedToGetData(block_number, e.to_string()))
 }
 

@@ -1,15 +1,18 @@
 use alloy_primitives::TxHash;
-use alloy_rpc_types::{eth::Filter, Log};
+use alloy_rpc_types::eth::Filter;
 use futures::{Future, Stream};
+
+use crate::reth_libmdbx::state_stream::LiveStateStreamError;
 
 /// `eth_subscribe`
 pub trait EthStream {
     type TxEnvelope;
     type FullBlock;
-    type ReceiptLog;
 
     /// `newHeads`
-    fn block_stream(&self) -> impl Future<Output = eyre::Result<impl Stream<Item = Self::FullBlock> + Send>> + Send;
+    fn block_stream(
+        &self,
+    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Result<Self::FullBlock, LiveStateStreamError>> + Send>> + Send;
 
     /// `newPendingTransactions` (true)
     fn full_pending_transaction_stream(
@@ -22,5 +25,8 @@ pub trait EthStream {
     ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>> + Send;
 
     /// `logs`
-    fn log_stream(&self, filter: Filter) -> impl Future<Output = eyre::Result<impl Stream<Item = Log> + Send>> + Send;
+    fn log_stream(
+        &self,
+        filter: Filter,
+    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Result<alloy_rpc_types::Log, LiveStateStreamError>> + Send>> + Send;
 }

@@ -19,7 +19,7 @@ use futures::Stream;
 use revm_database::{AlloyDB, WrapDatabaseAsync};
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
-use crate::traits::EthStream;
+use crate::{reth_libmdbx::state_stream::LiveStateStreamError, traits::EthStream};
 
 pub struct EthRpcClient<P, N> {
     provider: P,
@@ -69,10 +69,18 @@ where
 {
     type TxEnvelope = <N as Network>::TransactionResponse;
     type FullBlock = alloy_rpc_types_eth::Header;
-    type ReceiptLog = Log;
 
-    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = alloy_rpc_types_eth::Header> + Send> {
-        Ok(self.provider.subscribe_blocks().await?.into_stream())
+    async fn block_stream(
+        &self,
+    ) -> eyre::Result<impl Stream<Item = Result<alloy_rpc_types_eth::Header, LiveStateStreamError>> + Send> {
+        use futures::StreamExt;
+
+        Ok(self
+            .provider
+            .subscribe_blocks()
+            .await?
+            .into_stream()
+            .map(|v| Ok(v)))
     }
 
     async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
@@ -91,8 +99,18 @@ where
             .into_stream())
     }
 
-    async fn log_stream(&self, filter: Filter) -> eyre::Result<impl Stream<Item = Log> + Send> {
-        Ok(self.provider.subscribe_logs(&filter).await?.into_stream())
+    async fn log_stream(
+        &self,
+        filter: Filter,
+    ) -> eyre::Result<impl Stream<Item = Result<alloy_rpc_types::Log, LiveStateStreamError>> + Send> {
+        use futures::StreamExt;
+
+        Ok(self
+            .provider
+            .subscribe_logs(&filter)
+            .await?
+            .into_stream()
+            .map(|v| Ok(v)))
     }
 }
 
