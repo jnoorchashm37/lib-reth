@@ -1,32 +1,42 @@
+use alloy_network::Network;
 use alloy_primitives::TxHash;
+use alloy_provider::Provider;
+use alloy_provider::RootProvider;
 use alloy_rpc_types::eth::Filter;
-use futures::{Future, Stream};
-
-use crate::reth_libmdbx::state_stream::LiveStateStreamError;
+use futures::Stream;
 
 /// `eth_subscribe`
-pub trait EthStream {
-    type TxEnvelope;
-    type FullBlock;
+#[async_trait::async_trait]
+pub trait EthStream<N: Network> {
+    async fn root_provider(&self) -> eyre::Result<RootProvider<N>>;
 
     /// `newHeads`
-    fn block_stream(
+    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = <N as Network>::HeaderResponse>> {
+        let root = EthStream::root_provider(self).await?;
+        eyre::Ok(root.subscribe_blocks().await?.into_stream())
+    }
+
+    /// `newPendingTransactions` (true)
+    async fn full_pending_transaction_stream(
         &self,
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Result<Self::FullBlock, LiveStateStreamError>> + Send>> + Send;
+    ) -> eyre::Result<impl Stream<Item = <N as Network>::TransactionResponse>> {
+        let root = EthStream::root_provider(self).await?;
+        eyre::Ok(
+            root.subscribe_full_pending_transactions()
+                .await?
+                .into_stream(),
+        )
+    }
 
-    // /// `newPendingTransactions` (true)
-    // fn full_pending_transaction_stream(
-    //     &self,
-    // ) -> impl Future<Output = eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send>> + Send;
-
-    // /// `newPendingTransactions` (false)
-    // fn pending_transaction_hashes_stream(
-    //     &self,
-    // ) -> impl Future<Output = eyre::Result<impl Stream<Item = TxHash> + Send>> + Send;
+    /// `newPendingTransactions` (false)
+    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash>> {
+        let root = EthStream::root_provider(self).await?;
+        eyre::Ok(root.subscribe_pending_transactions().await?.into_stream())
+    }
 
     /// `logs`
-    fn log_stream(
-        &self,
-        filter: Filter,
-    ) -> impl Future<Output = eyre::Result<impl Stream<Item = Result<alloy_rpc_types::Log, LiveStateStreamError>> + Send>> + Send;
+    async fn log_stream(&self, filter: Filter) -> eyre::Result<impl Stream<Item = alloy_rpc_types::Log>> {
+        let root = EthStream::root_provider(self).await?;
+        eyre::Ok(root.subscribe_logs(&filter).await?.into_stream())
+    }
 }

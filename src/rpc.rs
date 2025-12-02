@@ -11,7 +11,7 @@ use alloy_rpc_client::IpcConnect;
 #[cfg(feature = "ws")]
 use alloy_rpc_client::WsConnect;
 #[cfg(any(feature = "ipc", feature = "ws"))]
-use alloy_rpc_types::{Filter, Log};
+use alloy_rpc_types::Filter;
 #[cfg(any(feature = "ipc", feature = "ws"))]
 use futures::Stream;
 
@@ -19,7 +19,7 @@ use futures::Stream;
 use revm_database::{AlloyDB, WrapDatabaseAsync};
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
-use crate::{reth_libmdbx::state_stream::LiveStateStreamError, traits::EthStream};
+use crate::traits::EthStream;
 
 pub struct EthRpcClient<P, N> {
     provider: P,
@@ -62,55 +62,34 @@ impl<N: Network> EthRpcClient<RootProvider<N>, N> {
 }
 
 #[cfg(any(feature = "ipc", feature = "ws"))]
-impl<P, N> EthStream for EthRpcClient<P, N>
+#[async_trait::async_trait]
+impl<N> EthStream<N> for RootProvider<N>
 where
-    P: Provider<N> + Clone,
-    N: Network<HeaderResponse = alloy_rpc_types::Header>,
+    N: Network,
 {
-    type TxEnvelope = <N as Network>::TransactionResponse;
-    type FullBlock = alloy_rpc_types_eth::Header;
-
-    async fn block_stream(
-        &self,
-    ) -> eyre::Result<impl Stream<Item = Result<alloy_rpc_types_eth::Header, LiveStateStreamError>> + Send> {
-        use futures::StreamExt;
-
-        Ok(self
-            .provider
-            .subscribe_blocks()
-            .await?
-            .into_stream()
-            .map(|v| Ok(v)))
+    async fn root_provider(&self) -> eyre::Result<RootProvider<N>> {
+        Ok(self.root().clone())
     }
 
-    // async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
-    //     Ok(self
-    //         .provider
-    //         .subscribe_full_pending_transactions()
-    //         .await?
-    //         .into_stream())
-    // }
+    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = <N as Network>::HeaderResponse>> {
+        Ok(self.subscribe_blocks().await?.into_stream())
+    }
 
-    // async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
-    //     Ok(self
-    //         .provider
-    //         .subscribe_pending_transactions()
-    //         .await?
-    //         .into_stream())
-    // }
-
-    async fn log_stream(
+    async fn full_pending_transaction_stream(
         &self,
-        filter: Filter,
-    ) -> eyre::Result<impl Stream<Item = Result<alloy_rpc_types::Log, LiveStateStreamError>> + Send> {
-        use futures::StreamExt;
-
+    ) -> eyre::Result<impl Stream<Item = <N as Network>::TransactionResponse>> {
         Ok(self
-            .provider
-            .subscribe_logs(&filter)
+            .subscribe_full_pending_transactions()
             .await?
-            .into_stream()
-            .map(|v| Ok(v)))
+            .into_stream())
+    }
+
+    async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash>> {
+        Ok(self.subscribe_pending_transactions().await?.into_stream())
+    }
+
+    async fn log_stream(&self, filter: Filter) -> eyre::Result<impl Stream<Item = alloy_rpc_types::Log>> {
+        Ok(self.subscribe_logs(&filter).await?.into_stream())
     }
 }
 

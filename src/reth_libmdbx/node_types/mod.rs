@@ -1,35 +1,26 @@
+use std::path::PathBuf;
 use std::sync::Arc;
-use std::{path::PathBuf, pin::Pin};
 
-use crate::reth_libmdbx::state_stream::LiveStateStreamError;
 #[cfg(feature = "revm")]
 use crate::traits::BlockNumberOrHash;
-use crate::{
-    reth_libmdbx::{
-        state_stream::{LiveStateStream, NodeBlock},
-        SupportedChains,
-    },
-    traits::EthStream,
-};
+use crate::traits::EthStream;
 
-use alloy_primitives::TxHash;
-use alloy_rpc_types::{eth::Filter, Log};
-use futures::{Stream, StreamExt};
+use alloy_network::Network;
+use alloy_provider::{builder, IpcConnect, RootProvider, WsConnect};
 use reth_db::DatabaseEnv;
 use reth_node_types::NodeTypes;
 use reth_provider::{BlockNumReader, DatabaseProviderFactory, StateProviderFactory, TryIntoHistoricalStateProvider};
 use reth_tasks::TaskSpawner;
-use reth_transaction_pool::TransactionPool;
 
 use reth_provider::CanonStateSubscriptions;
 use reth_rpc_eth_api::{helpers::FullEthApi, EthApiTypes, FullEthApiServer, RpcNodeCore};
-use tokio_stream::wrappers::BroadcastStream;
 
 pub mod node;
 #[cfg(feature = "op-reth-libmdbx")]
 pub mod op_node;
 
 pub trait NodeClientSpec: NodeTypes + Send + Sync {
+    type AlloyNetwork: Network;
     type NodeChainSpec: Clone + Send + Sync;
     type Api: FullEthApi + FullEthApiServer + EthApiTypes + RpcNodeCore + Clone + Send + Sync;
     type Filter: Clone + Send + Sync;
@@ -50,6 +41,7 @@ pub trait NodeClientSpec: NodeTypes + Send + Sync {
         task_executor: T,
         static_files_path: PathBuf,
         chain: Arc<Self::NodeChainSpec>,
+        ipc_path_or_rpc_url: Option<String>,
     ) -> eyre::Result<RethNodeClient<Self>>;
 }
 
@@ -60,9 +52,8 @@ pub struct RethNodeClient<N: NodeClientSpec> {
     debug: N::Debug,
     tx_pool: N::TxPool,
     db_provider: N::DbProvider,
-    live_state_stream: LiveStateStream<N>,
-    chain: SupportedChains,
     chain_spec: Arc<<N as NodeClientSpec>::NodeChainSpec>,
+    ipc_path_or_rpc_url: Option<String>,
 }
 
 impl<N: NodeClientSpec> RethNodeClient<N> {
@@ -95,56 +86,29 @@ impl<N: NodeClientSpec> RethNodeClient<N> {
     }
 }
 
-impl<N: NodeClientSpec> EthStream for RethNodeClient<N> {
-    type TxEnvelope = <<<N as NodeClientSpec>::Api as RpcNodeCore>::Pool as TransactionPool>::Transaction;
-    type FullBlock = NodeBlock<N>;
+#[async_trait::async_trait]
+impl<N: NodeClientSpec> EthStream<<N as NodeClientSpec>::AlloyNetwork> for RethNodeClient<N> {
+    async fn root_provider(&self) -> eyre::Result<RootProvider<<N as NodeClientSpec>::AlloyNetwork>> {
+        let conn_url = self
+            .ipc_path_or_rpc_url
+            .as_ref()
+            .ok_or_else(|| eyre::eyre!("no ipc path or rpc url has been set"))?;
 
-    async fn block_stream(&self) -> eyre::Result<impl Stream<Item = Result<Self::FullBlock, LiveStateStreamError>> + Send> {
-        let rx = BroadcastStream::new(self.live_state_stream.subscribe_blocks()).map(|v| match v {
-            Ok(Ok(v)) => Ok(v),
-            Ok(Err(e)) => Err(e),
-            Err(e) => Err(LiveStateStreamError::StreamError(e.to_string())),
-        });
-        Ok(Box::pin(rx) as Pin<Box<dyn Stream<Item = Result<Self::FullBlock, LiveStateStreamError>> + Send + Sync>>)
-    }
+        let builder = builder::<<N as NodeClientSpec>::AlloyNetwork>();
 
-    // async fn full_pending_transaction_stream(&self) -> eyre::Result<impl Stream<Item = Self::TxEnvelope> + Send> {
-    //     let stream = self
-    //         .eth_api()
-    //         .pool()
-    //         .new_pending_pool_transactions_listener()
-    //         .map(|pooled_tx| pooled_tx.transaction.transaction.clone());
+        let client = if conn_url.ends_with(".ipc") {
+            builder
+                .connect_ipc(IpcConnect::new(conn_url.to_string()))
+                .await?
+        } else if conn_url.starts_with("ws:") || conn_url.contains("wss:") {
+            builder.connect_ws(WsConnect::new(conn_url)).await?
+        } else if conn_url.starts_with("http:") || conn_url.contains("https:") {
+            builder.connect_http(conn_url.parse()?)
+        } else {
+            builder.connect(conn_url).await?
+        };
 
-    //     Ok(stream)
-    // }
-
-    // async fn pending_transaction_hashes_stream(&self) -> eyre::Result<impl Stream<Item = TxHash> + Send> {
-    //     let stream = self
-    //         .eth_api()
-    //         .pool()
-    //         .new_pending_pool_transactions_listener()
-    //         .map(|tx| *tx.transaction.hash());
-
-    //     Ok(stream)
-    // }
-
-    async fn log_stream(
-        &self,
-        filter: Filter,
-    ) -> eyre::Result<impl Stream<Item = Result<Log, LiveStateStreamError>> + Send> {
-        let rx = BroadcastStream::new(self.live_state_stream.subscribe_logs()).flat_map(move |v| {
-            futures::stream::iter(match v {
-                Ok(Ok(logs)) => logs
-                    .into_iter()
-                    .filter(|log| filter.matches(&log.inner))
-                    .map(Ok)
-                    .collect::<Vec<_>>(),
-                Ok(Err(e)) => vec![Err(e)],
-                Err(e) => vec![Err(LiveStateStreamError::StreamError(e.to_string()))],
-            })
-        });
-
-        Ok(Box::pin(rx) as Pin<Box<dyn Stream<Item = Result<Log, LiveStateStreamError>> + Send + Sync>>)
+        Ok(client)
     }
 }
 

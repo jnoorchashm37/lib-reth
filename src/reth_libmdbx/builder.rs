@@ -15,11 +15,12 @@ pub struct RethNodeClientBuilder<N: NodeClientSpec> {
     max_tasks: usize,
     db_args: Option<DatabaseArguments>,
     chain: Arc<N::NodeChainSpec>,
+    ipc_path_or_rpc_url: Option<String>,
 }
 
 impl<N: NodeClientSpec> RethNodeClientBuilder<N> {
-    pub fn new(db_path: &str, max_tasks: usize, chain: Arc<N::NodeChainSpec>) -> Self {
-        Self { db_path: db_path.to_string(), max_tasks, db_args: None, chain }
+    pub fn new(db_path: &str, max_tasks: usize, chain: Arc<N::NodeChainSpec>, ipc_path_or_rpc_url: Option<String>) -> Self {
+        Self { db_path: db_path.to_string(), max_tasks, db_args: None, chain, ipc_path_or_rpc_url }
     }
 
     pub fn with_db_args(mut self, db_args: DatabaseArguments) -> Self {
@@ -36,7 +37,7 @@ impl<N: NodeClientSpec> RethNodeClientBuilder<N> {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        N::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files, self.chain)
+        N::new_with_db(db, self.max_tasks, TokioTaskExecutor::default(), static_files, self.chain, self.ipc_path_or_rpc_url)
     }
 
     pub fn build_with_task_executor<T: TaskSpawner + Clone + 'static>(
@@ -51,7 +52,7 @@ impl<N: NodeClientSpec> RethNodeClientBuilder<N> {
                 .unwrap_or(DatabaseArguments::new(Default::default())),
         )?);
 
-        N::new_with_db(db, self.max_tasks, task_executor, static_files, self.chain)
+        N::new_with_db(db, self.max_tasks, task_executor, static_files, self.chain, self.ipc_path_or_rpc_url)
     }
 
     /// (db_path, static_files)

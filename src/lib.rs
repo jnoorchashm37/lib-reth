@@ -6,11 +6,6 @@ pub mod reth_libmdbx;
 pub mod rpc;
 pub mod traits;
 
-pub(crate) mod utils;
-
-mod dual_provider;
-pub use dual_provider::*;
-
 #[cfg(feature = "op-reth-libmdbx")]
 pub mod op_reth {
     pub use reth_optimism_chainspec::*;

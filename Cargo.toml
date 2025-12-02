@@ -17,20 +17,12 @@ reth-rpc-eth-types = { git = "https://github.com/paradigmxyz/reth", version = "1
 reth-transaction-pool = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-tasks = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-network-api = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
-reth-node-builder = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-chainspec = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
     "serde",
     "superchain-configs",
 
-] }
-reth-primitives-traits = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true, features = [
-    "serde",
-    "serde-bincode-compat",
-    "reth-codec",
-    "rpc-compat",
-    "op",
 ] }
 reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
 reth-optimism-evm = { git = "https://github.com/paradigmxyz/reth", version = "1.9.3", tag = "v1.9.3", optional = true }
@@ -67,11 +59,7 @@ alloy-network = { version = "1.0.41", default-features = false }
 alloy-rpc-types = { version = "1.0.41", default-features = false, features = [
     "eth",
 ] }
-alloy-rpc-types-eth = { version = "1.0.41", default-features = false }
-alloy-consensus = { version = "1.0.41", default-features = false }
 alloy-primitives = { version = "1.4.1", default-features = false }
-alloy-transport = { version = "1.0.41", default-features = false, optional = true }
-alloy-eips = { version = "1.0.41", default-features = false, optional = true }
 op-alloy-network = { version = "0.22.1", optional = true }
 op-alloy-consensus = { version = "0.22.1", optional = true }
 
@@ -90,27 +78,22 @@ revm-database = { version = "9.0.5", default-features = false, features = [
 
 # async
 tokio = { version = "1", features = ["full"] }
-tokio-stream = "0.1.11"
 futures = "0.3"
-async-trait = { version = "0", optional = true }
+async-trait = "0"
 
 # misc
 eyre = "0.6.5"
 exe-runners = { git = "https://github.com/jnoorchashm37/exe-runners", features = [
     "reth-tasks",
 ] }
-jsonrpsee-types = { version = "0.26.0", optional = true }
-thiserror = "2"
-parking_lot = "0.12"
 
 
 [dev-dependencies]
-tokio-stream = "0.1"
 serial_test = "3.1"
 
 
 [features]
-default = ["full", "op-reth-libmdbx"]
+default = ["full"]
 full = ["ipc", "ws", "uniswap-storage", "revm", "reth-libmdbx"]
 
 
@@ -144,13 +127,8 @@ reth-libmdbx = [
     "dep:reth-rpc-eth-types",
     "dep:reth-db",
     "dep:reth-node-types",
-    "dep:reth-primitives-traits",
     "dep:reth-optimism-primitives",
-    "dep:alloy-transport",
-    "dep:alloy-eips",
     "dep:reth-storage-api",
-    "dep:jsonrpsee-types",
-    "dep:reth-node-builder",
 ]
 
-uniswap-storage = ["dep:uniswap-storage", "dep:async-trait"]
+uniswap-storage = ["dep:uniswap-storage"]

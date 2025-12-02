@@ -51,7 +51,6 @@ impl DatabaseRef for RethLibmdbxDatabaseRef {
 }
 
 fn change_bytecode(bytes: reth_revm::bytecode::Bytecode) -> eyre::Result<Bytecode> {
-    // Ok(bytes)
     let new_bytecode = match bytes {
         reth_revm::bytecode::Bytecode::LegacyAnalyzed(legacy_analyzed_bytecode) => {
             Bytecode::LegacyAnalyzed(LegacyAnalyzedBytecode::new(
@@ -103,9 +102,7 @@ impl From<eyre::ErrReport> for RevmUtilError {
 
 #[cfg(feature = "uniswap-storage")]
 mod _uniswap_storage {
-    use alloy_network::Network;
     use alloy_primitives::{Address, StorageKey, StorageValue};
-    use alloy_provider::Provider;
     use reth_provider::StateProvider;
     use reth_rpc_eth_api::helpers::EthState;
     use uniswap_storage::StorageSlotFetcher;
@@ -113,36 +110,12 @@ mod _uniswap_storage {
     use crate::{
         reth_libmdbx::{NodeClientSpec, RethNodeClient},
         traits::reth_revm_utils::RethLibmdbxDatabaseRef,
-        DualRethNodeClient,
     };
 
     #[async_trait::async_trait]
     impl StorageSlotFetcher for RethLibmdbxDatabaseRef {
         async fn storage_at(&self, address: Address, key: StorageKey, _: Option<u64>) -> eyre::Result<StorageValue> {
             Ok(self.0.storage(address, key)?.unwrap_or_default())
-        }
-    }
-
-    #[async_trait::async_trait]
-    impl<Node, P, N> StorageSlotFetcher for DualRethNodeClient<Node, P, N>
-    where
-        Node: NodeClientSpec,
-
-        P: Provider<N> + Clone,
-        N: Network,
-    {
-        async fn storage_at(
-            &self,
-            address: Address,
-            key: StorageKey,
-            block_number: Option<u64>,
-        ) -> eyre::Result<StorageValue> {
-            Ok(self
-                .node_client()
-                .eth_api()
-                .storage_at(address, key.into(), block_number.map(Into::into))
-                .await?
-                .into())
         }
     }
 
